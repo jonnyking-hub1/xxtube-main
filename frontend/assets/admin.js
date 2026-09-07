@@ -12,7 +12,6 @@ document.getElementById('adminPassword')?.addEventListener('keydown', e => {
 });
 
 function attemptLogin() {
-    alert('DEBUG: attemptLogin fired'); // TEMP
     const pw  = document.getElementById('adminPassword').value;
     const err = document.getElementById('adminLoginErr');
 
@@ -21,10 +20,7 @@ function attemptLogin() {
     // Store and verify against a test API call
     ADMIN_SECRET = pw;
     fetch('/api/admin/stats', { headers: { 'X-Admin-Secret': ADMIN_SECRET } })
-        .then(async r => {
-            // TEMP DEBUG — remove after fixing login
-            const bodyText = await r.text();
-            alert('DEBUG\nstatus: ' + r.status + '\nbody: ' + bodyText + '\npw length sent: ' + ADMIN_SECRET.length);
+        .then(r => {
             if (r.ok) {
                 document.getElementById('adminGate').style.display = 'none';
                 document.getElementById('adminPanel').style.display = 'block';
@@ -36,10 +32,7 @@ function attemptLogin() {
                 ADMIN_SECRET = '';
             }
         })
-        .catch(e => {
-            alert('DEBUG: fetch failed — ' + e.message); // TEMP
-            err.style.display = 'block'; ADMIN_SECRET = '';
-        });
+        .catch(() => { err.style.display = 'block'; ADMIN_SECRET = ''; });
 }
 
 // ── Navigation ────────────────────────────────────────────────
