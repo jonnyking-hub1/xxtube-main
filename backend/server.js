@@ -9,9 +9,7 @@ const app = express();
 
 // ── Security & Parsing ────────────────────────────────────────
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production'
-        ? ['https://xxtube.com', 'https://www.xxtube.com']
-        : 'http://localhost:3000',
+    origin: '*',
     credentials: true,
 }));
 
@@ -35,7 +33,7 @@ app.use('/api/sessions',   require('./routes/sessions'));
 app.use('/api/videos',     require('./routes/videos'));
 app.use('/api/payments',   require('./routes/payments'));
 app.use('/api/categories', require('./routes/categories'));
-app.use('/api/performers', require('./routes/categories')); // performers served from same router
+app.use('/api/performers', require('./routes/categories'));
 app.use('/api/admin',      require('./routes/admin'));
 
 // ── Static Frontend ───────────────────────────────────────────
@@ -56,16 +54,11 @@ app.use((err, req, res, next) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────
-// Vercel runs this as a serverless function — no app.listen() needed there.
-// For local dev (npm run dev), we still listen normally.
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-        console.log(`\n🚀 XXTube running on http://localhost:${PORT}`);
-        console.log(`   Admin panel: http://localhost:${PORT}/admin.html`);
-        console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
-    });
-}
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🚀 XXTube running on port ${PORT}`);
+    console.log(`   Admin panel: http://localhost:${PORT}/admin.html`);
+    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
+});
 
-// Required for Vercel serverless
 module.exports = app;
