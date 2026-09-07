@@ -188,3 +188,4 @@ router.post('/recover', recoveryLimiter, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.pendingLogs = pendingLogs;
