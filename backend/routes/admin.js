@@ -4,30 +4,6 @@ const { requireAdmin } = require('../middleware/auth');
 const { createBunnyVideo } = require('../services/bunny');
 const db       = require('../db/pool');
 
-// ── TEMP DEBUG — remove after confirming ADMIN_SECRET is set correctly ──
-router.get('/_debug-secret', (req, res) => {
-    const val = process.env.ADMIN_SECRET;
-    res.json({
-        is_set: val !== undefined,
-        length: val ? val.length : 0,
-        first_char: val ? val[0] : null,
-        last_char: val ? val[val.length - 1] : null,
-    });
-});
-
-// ── TEMP DEBUG 2 — test a password directly from the URL, no devtools needed ──
-router.get('/_debug-login', (req, res) => {
-    const stored = process.env.ADMIN_SECRET || '';
-    const tried  = req.query.pw || '';
-    res.json({
-        stored_length: stored.length,
-        tried_length: tried.length,
-        stored_codes: [...stored].map(c => c.charCodeAt(0)),
-        tried_codes: [...tried].map(c => c.charCodeAt(0)),
-        match: stored === tried,
-    });
-});
-
 router.use(requireAdmin);
 
 // ── Payment Monitor ───────────────────────────────────────────
