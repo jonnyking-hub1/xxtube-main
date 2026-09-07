@@ -17,6 +17,10 @@ const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
+// Vercel sits in front of the app as a proxy — trust its X-Forwarded-* headers
+// so express-rate-limit can correctly identify clients (fixes ERR_ERL_UNEXPECTED_X_FORWARDED_FOR).
+app.set('trust proxy', 1);
+
 // ── Security & Parsing ────────────────────────────────────────
 app.use(cors({
     origin: '*',
