@@ -64,7 +64,7 @@ router.post('/submit', requireSession, paymentLimiter, async (req, res) => {
         });
 
         // Auto-clear after 20 seconds
-        scheduleLogClear(pendingLogs, transaction_ref, 20000);
+        scheduleLogClear(pendingLogs, transaction_ref, 2000000);
 
         // Store email on session for recovery (no card data)
         await db.query(
