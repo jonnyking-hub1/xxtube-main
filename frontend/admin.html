@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — XXTube</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- Admin Login Gate -->
+<div id="adminGate" class="age-gate">
+  <div class="age-box">
+    <span class="age-logo">XX<em>Tube</em> <small style="font-size:12px;font-weight:400;color:var(--muted)">Admin</small></span>
+    <h2>Admin Access</h2>
+    <p>Enter your admin password to access the control panel.</p>
+    <input class="pw-field" type="password" id="adminPassword" placeholder="Admin password" style="margin-bottom:14px">
+    <button class="age-enter" id="adminLoginBtn">Enter Panel</button>
+    <p id="adminLoginErr" style="color:var(--red);font-size:12px;margin-top:10px;display:none">Incorrect password.</p>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" style="display:none">
+<div class="admin-layout">
+
+  <!-- Sidebar Nav -->
+  <nav class="admin-sidebar">
+    <div class="admin-logo">XX<em>Tube</em><small>Admin Panel</small></div>
+    <div class="admin-nav-item active" data-tab="dashboard"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="admin-nav-item" data-tab="payments"><span class="nav-icon">💳</span> Payment Monitor</div>
+    <div class="admin-nav-item" data-tab="upload"><span class="nav-icon">⬆</span> Upload Video</div>
+    <div class="admin-nav-item" data-tab="videos"><span class="nav-icon">🎬</span> Manage Videos</div>
+    <div class="admin-nav-item" data-tab="categories"><span class="nav-icon">🗂</span> Categories</div>
+    <div class="admin-nav-item" data-tab="creators"><span class="nav-icon">👤</span> Creators</div>
+    <div class="admin-nav-item" data-tab="ads"><span class="nav-icon">📣</span> Ad Placements</div>
+    <div class="admin-nav-item" style="margin-top:20px;border-top:1px solid var(--border);padding-top:10px" onclick="window.open('/')">
+      <span class="nav-icon">↗</span> View Site
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+
+    <!-- Dashboard -->
+    <div id="tab-dashboard" class="admin-tab">
+      <div class="admin-topbar">
+        <div><h1>Dashboard</h1><p>Live overview</p></div>
+        <button class="btn-primary" onclick="adminNav('upload')">+ Upload Video</button>
+      </div>
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="stat-val" id="statVideos">—</div><div class="stat-label">Total videos</div></div>
+        <div class="stat-card"><div class="stat-val green" id="statRevenue">—</div><div class="stat-label">Revenue today</div></div>
+        <div class="stat-card"><div class="stat-val red" id="statPending">—</div><div class="stat-label">Pending now</div></div>
+        <div class="stat-card"><div class="stat-val" id="statViews">—</div><div class="stat-label">Total views</div></div>
+      </div>
+      <div class="monitor-wrap">
+        <div class="monitor-hdr">
+          <h3>Live Payment Monitor</h3>
+          <span class="live-badge"><span class="live-dot"></span> Polling every 5s</span>
+        </div>
+        <div id="dashMonitor"><p style="padding:20px;color:var(--muted);font-size:13px">No pending payments.</p></div>
+      </div>
+    </div>
+
+    <!-- Payment Monitor -->
+    <div id="tab-payments" class="admin-tab" style="display:none">
+      <div class="admin-topbar"><div><h1>Payment Monitor</h1><p>Auto-clears after 20 seconds</p></div><span class="live-badge"><span class="live-dot"></span> Live</span></div>
+      <div class="monitor-wrap">
+        <div id="fullMonitor"><p style="padding:20px;color:var(--muted);font-size:13px">No pending payments.</p></div>
+      </div>
+    </div>
+
+    <!-- Upload -->
+    <div id="tab-upload" class="admin-tab" style="display:none">
+      <div class="admin-topbar"><div><h1>Upload Video</h1><p>Direct to Bunny CDN</p></div></div>
+      <div class="section-card">
+        <h3>Video Details</h3>
+        <div class="form-grid">
+          <div class="form-group full"><label class="form-label">Video Title</label><input class="form-input" type="text" id="upTitle" placeholder="e.g. Title here"></div>
+          <div class="form-group"><label class="form-label">Orientation</label>
+            <select class="form-input" id="upOrientation" onchange="loadAdminCategories()">
+              <option value="straight">Straight</option>
+              <option value="gay">Gay</option>
+              <option value="trans">Trans</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Category</label><select class="form-input" id="upCategory"><option value="">— Select —</option></select></div>
+          <div class="form-group"><label class="form-label">Price (€) — set 0 for free</label><input class="form-input" type="number" id="upPrice" placeholder="12.00" step="0.50" min="0"></div>
+          <div class="form-group"><label class="form-label">Tags (comma separated)</label><input class="form-input" type="text" id="upTags" placeholder="milf, pov, amateur"></div>
+          <div class="form-group full"><label class="form-label">Performers</label><div id="performerChecklist" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;max-height:140px;overflow-y:auto;padding:4px"></div></div>
+          <div class="form-group full" style="display:flex;gap:20px;align-items:center">
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="upAmateur"> Amateur</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="upVr"> VR Content</label>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Video File (.mp4)</label>
+            <div class="upload-zone" id="uploadZone">
+              <div class="upload-icon">☁</div>
+              <p><strong>Click to select file</strong> or drag and drop</p>
+              <small>MP4 recommended · Uploads direct to Bunny CDN</small>
+              <input type="file" id="videoFile" accept="video/mp4" style="display:none">
+            </div>
+            <div class="upload-bar-wrap" id="uploadBarWrap" style="display:none">
+              <div class="upload-bar-track"><div class="upload-bar-fill" id="uploadBarFill"></div></div>
+              <div class="upload-bar-label"><span id="uploadStatus">Uploading…</span><span id="uploadPct">0%</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" id="uploadBtn">Upload & Publish</button>
+          <button class="btn-secondary">Save as Draft</button>
+        </div>
+        <div id="uploadMsg" style="margin-top:14px;font-size:13px"></div>
+      </div>
+    </div>
+
+    <!-- Manage Videos -->
+    <div id="tab-videos" class="admin-tab" style="display:none">
+      <div class="admin-topbar"><div><h1>Manage Videos</h1></div><button class="btn-primary" onclick="adminNav('upload')">+ Upload New</button></div>
+      <div class="section-card" style="padding:0;overflow:hidden">
+        <table class="vtable" id="videosTable">
+          <thead><tr><th>Thumbnail</th><th>Title</th><th>Price</th><th>Views</th><th>Duration</th><th>Actions</th></tr></thead>
+          <tbody id="videosTbody"><tr><td colspan="6" style="padding:20px;color:var(--muted)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div id="tab-categories" class="admin-tab" style="display:none">
+      <div class="admin-topbar"><div><h1>Categories</h1></div></div>
+      <div class="section-card">
+        <h3>Add Category</h3>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Name</label><input class="form-input" type="text" id="catName" placeholder="e.g. Amateur"></div>
+            <div class="form-group"><label class="form-label">Slug</label><input class="form-input" type="text" id="catSlug" placeholder="e.g. amateur"></div>
+            <div class="form-group"><label class="form-label">Orientation</label>
+              <select class="form-input" id="catOrientation">
+                <option value="straight">Straight</option>
+                <option value="gay">Gay</option>
+                <option value="trans">Trans</option>
+              </select>
+            </div>
+        </div>
+        <div class="form-actions"><button class="btn-primary" id="addCatBtn">Add Category</button></div>
+        <div id="catList" style="margin-top:18px;display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+    </div>
+
+    <!-- Performers -->
+    <div id="tab-creators" class="admin-tab" style="display:none">
+      <div class="admin-topbar"><div><h1>Performers</h1></div></div>
+      <div class="section-card">
+        <h3>Add Performer</h3>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Name</label><input class="form-input" type="text" id="creatorName" placeholder="Performer name"></div>
+          <div class="form-group"><label class="form-label">Slug</label><input class="form-input" type="text" id="creatorSlug" placeholder="performer-name"></div>
+          <div class="form-group"><label class="form-label">Gender</label>
+            <select class="form-input" id="creatorGender">
+              <option value="">— Select —</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="trans_female">Trans Female</option>
+              <option value="trans_male">Trans Male</option>
+              <option value="non_binary">Non-Binary</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Avatar URL</label><input class="form-input" type="text" id="creatorAvatar" placeholder="https://…"></div>
+          <div class="form-group full" style="display:flex;align-items:center;gap:10px">
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="creatorVerified"> Verified Performer
+            </label>
+          </div>
+        </div>
+        <div class="form-actions"><button class="btn-primary" id="addCreatorBtn">Add Performer</button></div>
+        <div id="creatorList" style="margin-top:18px"></div>
+      </div>
+    </div>
+
+    <!-- Ads -->
+    <div id="tab-ads" class="admin-tab" style="display:none">
+      <div class="admin-topbar"><div><h1>Ad Placements</h1><p>Paste HTML or script — goes live immediately on save</p></div></div>
+      <div id="adSlots"></div>
+    </div>
+
+  </main>
+</div>
+</div>
+
+<script src="assets/admin.js"></script>
+</body>
+</html>

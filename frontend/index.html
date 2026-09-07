@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XXTube — Premium Adult Streaming</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- Age Gate -->
+<div id="age-gate" class="age-gate">
+  <div class="age-box">
+    <span class="age-logo">XX<em>Tube</em></span>
+    <h2>Age Verification Required</h2>
+    <p>This platform contains explicit adult content intended for adults only. You must be 18 years or older to enter.</p>
+    <button class="age-enter" id="ageConfirmBtn">I Am 18+ — Enter Site</button>
+    <p class="age-fine">By entering you confirm you are of legal age in your jurisdiction and consent to viewing adult content</p>
+  </div>
+</div>
+
+<!-- Drawer Overlay -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<!-- Off-canvas Drawer -->
+<div class="drawer" id="drawer">
+  <div class="drawer-top">
+    <a href="/" class="site-logo">XX<em>Tube</em></a>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <div class="drawer-sec">
+    <h4>Orientation</h4>
+    <div class="d-item active" data-orientation="straight" id="dStraight"><span class="d-dot"></span> Straight</div>
+    <div class="d-item" data-orientation="gay" id="dGay"><span class="d-dot off"></span> Gay</div>
+    <div class="d-item" data-orientation="trans" id="dTrans"><span class="d-dot off"></span> Trans</div>
+  </div>
+  <div class="drawer-sec">
+    <h4>Categories</h4>
+    <div id="drawerCategories"></div>
+  </div>
+  <div class="drawer-sec" style="border:none">
+    <h4>Performers</h4>
+    <div id="drawerPerformers"></div>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="header-row">
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="/" class="site-logo">XX<em>Tube</em></a>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Search videos, performers, tags…" autocomplete="off">
+      <span class="search-icon">⌕</span>
+    </div>
+    <div class="hdr-actions">
+      <button class="btn-ghost" id="recoverBtn">Recover Access</button>
+    </div>
+  </div>
+
+  <!-- Orientation switcher -->
+  <div class="orientation-bar">
+    <button class="orient-btn active" data-orientation="straight">Straight</button>
+    <button class="orient-btn" data-orientation="gay">Gay</button>
+    <button class="orient-btn" data-orientation="trans">Trans</button>
+  </div>
+
+  <div class="ad-strip">
+    <div class="ad-728" id="adHeader">728 × 90 — Ad Placement</div>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="page-wrap">
+  <div class="content-row">
+    <aside class="sidebar-ad-wrap">
+      <div class="ad-sidebar" id="adSidebar">160 × 480<br>Sidebar Ad</div>
+    </aside>
+    <main class="main-col">
+      <div class="filter-strip" id="filterStrip">
+        <button class="fpill active" data-cat="">All</button>
+      </div>
+      <p class="grid-label" id="gridLabel">Loading…</p>
+      <div class="vgrid" id="videoGrid"></div>
+      <div class="pagination" id="pagination"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Recover Modal -->
+<div class="modal-backdrop" id="recoverModal">
+  <div class="recover-box">
+    <h2>Recover Your Access</h2>
+    <p>Enter the email you used when paying, or your transaction reference.</p>
+    <input class="pw-field" type="email" id="recoverEmail" placeholder="Email address you paid with">
+    <p class="recover-or">— or —</p>
+    <input class="pw-field" type="text" id="recoverRef" placeholder="Transaction reference">
+    <button class="recover-submit" id="recoverSubmit">Find My Access</button>
+    <div id="recoverMsg" style="margin-top:12px;font-size:13px;text-align:center"></div>
+    <a class="recover-cancel" id="recoverCancel">Cancel</a>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
