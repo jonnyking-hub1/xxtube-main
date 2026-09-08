@@ -29,6 +29,11 @@ function generateBunnyStreamUrl(bunnyVideoId) {
  * Creates a new video record on Bunny Stream and returns the video GUID + TUS upload URL.
  * The admin frontend uses this to upload directly to Bunny — never through this server.
  */
+/**
+ * Creates a new video record on Bunny Stream and returns a presigned TUS upload credential.
+ * The admin frontend uses this to upload directly to Bunny via the TUS protocol —
+ * the raw API key never leaves the server, only a short-lived signed credential does.
+ */
 async function createBunnyVideo(title) {
     const libraryId = process.env.BUNNY_STREAM_LIBRARY_ID;
     const apiKey    = process.env.BUNNY_STREAM_API_KEY;
@@ -50,11 +55,21 @@ async function createBunnyVideo(title) {
     }
 
     const data = await response.json();
+    const videoId = data.guid;
+
+    // Presigned TUS credential — expires in 1 hour, plenty for a large upload.
+    const expirationTime = Math.floor(Date.now() / 1000) + 3600;
+    const signature = crypto
+        .createHash('sha256')
+        .update(`${libraryId}${apiKey}${expirationTime}${videoId}`)
+        .digest('hex');
+
     return {
-        videoId:   data.guid,
-        uploadUrl: `https://video.bunnycdn.com/tusupload`,
+        videoId,
         libraryId,
-        apiKey,
+        expirationTime,
+        signature,
+        uploadUrl: `https://video.bunnycdn.com/tusupload`,
     };
 }
 
