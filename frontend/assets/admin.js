@@ -6,8 +6,6 @@ let ADMIN_SECRET  = '';
 let monitorInterval = null;
 
 // ── Boot ──────────────────────────────────────────────────────
-alert('DEBUG2: script running, tus=' + (typeof tus !== 'undefined')); // TEMP
-
 document.getElementById('adminLoginBtn')?.addEventListener('click', attemptLogin);
 document.getElementById('adminPassword')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') attemptLogin();
@@ -467,4 +465,5 @@ async function loadAdsTab() {
             <div style="display:flex;align-items:center;gap:12px">
                 <button class="btn-primary" onclick="saveAd('${ad.slot_key}')">Save</button>
                 <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);cursor:pointer">
-                    <input type="checkbox" id="adA
+                    <input type="checkbox" id="adActive_${ad.slot_key}" ${ad.is_active ? 'checked' : ''}> Active
+                
