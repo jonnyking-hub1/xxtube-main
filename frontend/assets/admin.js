@@ -6,8 +6,6 @@ let ADMIN_SECRET  = '';
 let monitorInterval = null;
 
 // ── Boot ──────────────────────────────────────────────────────
-alert('DEBUG: admin.js loaded, tus available: ' + (typeof tus !== 'undefined')); // TEMP
-
 document.getElementById('adminLoginBtn')?.addEventListener('click', attemptLogin);
 document.getElementById('adminPassword')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') attemptLogin();
@@ -468,88 +466,4 @@ async function loadAdsTab() {
                 <button class="btn-primary" onclick="saveAd('${ad.slot_key}')">Save</button>
                 <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);cursor:pointer">
                     <input type="checkbox" id="adActive_${ad.slot_key}" ${ad.is_active ? 'checked' : ''}> Active
-                </label>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function saveAd(slotKey) {
-    const html     = document.getElementById('adCode_' + slotKey)?.value || '';
-    const isActive = document.getElementById('adActive_' + slotKey)?.checked || false;
-    await api('PUT', `/api/admin/ads/${slotKey}`, { html_code: html, is_active: isActive });
-    alert('Ad placement saved.');
-}
-
-// ── Form Selects ──────────────────────────────────────────────
-async function loadFormSelects() {
-    await loadAdminCategories();
-    await loadPerformerChecklist();
-}
-
-async function loadAdminCategories() {
-    const orientation = document.getElementById('upOrientation')?.value || 'straight';
-    try {
-        const cats   = await api('GET', `/api/admin/categories?orientation=${orientation}`);
-        const catSel = document.getElementById('upCategory');
-        if (catSel) {
-            catSel.innerHTML = '<option value="">— Select category —</option>' +
-                cats.categories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-        }
-    } catch (e) { console.warn('Category selects failed:', e); }
-}
-
-async function loadPerformerChecklist() {
-    try {
-        const res  = await api('GET', '/api/admin/performers');
-        const wrap = document.getElementById('performerChecklist');
-        if (wrap && res.performers) {
-            wrap.innerHTML = res.performers.map(p => `
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;
-                    background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:4px 8px">
-                    <input type="checkbox" value="${p.id}" class="performer-check">
-                    ${esc(p.name)} ${p.is_verified ? '✓' : ''}
-                </label>`).join('');
-        }
-    } catch (e) { console.warn('Performer checklist failed:', e); }
-}
-
-// ── API Helper ────────────────────────────────────────────────
-async function api(method, url, body) {
-    const opts = {
-        method,
-        headers: {
-            'X-Admin-Secret': ADMIN_SECRET,
-            'Content-Type':   'application/json',
-        },
-        credentials: 'include',
-    };
-    if (body) opts.body = JSON.stringify(body);
-
-    const res  = await fetch(url, opts);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'API error');
-    return data;
-}
-
-// ── Helpers ───────────────────────────────────────────────────
-function formatViews(n) {
-    if (!n) return '0';
-    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-    if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
-    return String(n);
-}
-
-function formatDuration(s) {
-    if (!s) return '—';
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-    return `${m}:${String(sec).padStart(2,'0')}`;
-}
-
-function esc(str) {
-    return String(str || '')
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+                
