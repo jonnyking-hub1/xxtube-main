@@ -205,7 +205,9 @@ img { display: block; }
   display: flex; gap: 2px;
   background: var(--bg); border-bottom: 1px solid var(--border);
   padding: 0 20px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
 }
+.orientation-bar::-webkit-scrollbar { display: none; }
 .orient-btn {
   padding: 10px 20px; font-size: 13px; font-weight: 600;
   background: none; border: none; color: var(--muted);
@@ -326,6 +328,27 @@ img { display: block; }
     .stats-row       { grid-template-columns: 1fr; }
     .admin-topbar h1 { font-size: 17px; }
     .upload-zone     { padding: 20px; }
+}
+
+/* ── Site-wide mobile responsiveness (homepage / watch page) ─── */
+@media(max-width:600px) {
+    .header-row {
+        flex-wrap: wrap; height: auto; padding: 10px 14px; row-gap: 8px;
+    }
+    .search-wrap { order: 3; flex-basis: 100%; max-width: none; }
+    .hdr-actions .btn-ghost { padding: 6px 10px; font-size: 11px; }
+    .site-logo { font-size: 18px; }
+    .orientation-bar { padding: 0 14px; }
+    .page-wrap { padding: 0 14px; }
+    .content-row { padding: 14px 0; gap: 14px; }
+    .vgrid { gap: 12px 10px; }
+
+    .watch-wrap { padding: 14px; gap: 14px; }
+    .video-title-big { font-size: 17px; }
+    .video-meta-row { gap: 10px 14px; }
+    .react-row { flex-wrap: wrap; }
+    .creator-strip { padding: 12px; }
+    .rel-thumb { width: 100px; }
 }
 .vt-title { font-weight: 500; margin-bottom: 2px; }
 .vt-cat { font-size: 10px; color: var(--muted); }
