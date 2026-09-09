@@ -120,10 +120,12 @@
     <div id="tab-videos" class="admin-tab" style="display:none">
       <div class="admin-topbar"><div><h1>Manage Videos</h1></div><button class="btn-primary" onclick="adminNav('upload')">+ Upload New</button></div>
       <div class="section-card" style="padding:0;overflow:hidden">
+        <div style="overflow-x:auto">
         <table class="vtable" id="videosTable">
           <thead><tr><th>Thumbnail</th><th>Title</th><th>Price</th><th>Views</th><th>Duration</th><th>Actions</th></tr></thead>
           <tbody id="videosTbody"><tr><td colspan="6" style="padding:20px;color:var(--muted)">Loading…</td></tr></tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -191,4 +193,4 @@
 <script src="assets/tus.min.js"></script>
 <script src="assets/admin.js"></script>
 </body>
-  </html>
+</html>
