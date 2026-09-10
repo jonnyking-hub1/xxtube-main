@@ -123,8 +123,18 @@ img { display: block; }
 .vcard-info { padding: 0 1px; }
 .vtitle { font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--text); margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .vcard:hover .vtitle { color: #fff; }
-.vmeta { display: flex; align-items: center; gap: 7px; }
+.vmeta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .vcreator { font-size: 11px; color: var(--muted); }
+.vmeta-item {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted);
+  background: rgba(255,255,255,.02); border: 1px solid var(--border); border-radius: 999px; padding: 3px 7px;
+}
+.mini-icon {
+  width: 12px; height: 12px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 8px; line-height: 1; color: #fff; background: rgba(255,255,255,.06);
+}
+.mini-tag { background: rgba(34,197,94,.18); color: #8ae7a4; }
+.mini-view { background: rgba(96,165,250,.18); color: #bfd8ff; }
 .vdivider { width: 1px; height: 9px; background: var(--subtle); }
 .vviews { font-size: 11px; color: var(--muted); }
 
@@ -141,12 +151,33 @@ img { display: block; }
 .player-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
 .player-container .video-js { width: 100% !important; height: 100% !important; }
 .video-title-big { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 10px; }
-.video-meta-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
-.vmr-item { font-size: 12px; color: var(--muted); }
+.video-meta-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.vmr-item { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); background: rgba(255,255,255,.02); border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px; }
+.meta-icon {
+  width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px; line-height: 1; border: 1px solid rgba(255,255,255,.08);
+}
+.meta-view { background: rgba(255,255,255,.06); color: #dfe6ff; }
+.meta-duration { background: rgba(232,0,30,.12); color: #ff7e8d; }
+.meta-category { background: rgba(34,197,94,.12); color: #8ae7a4; }
 .vmr-price { font-size: 14px; color: var(--red); font-weight: 800; }
-.react-row { display: flex; gap: 8px; margin-bottom: 18px; }
-.react-btn { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 3px; padding: 8px 14px; font-size: 12px; font-weight: 500; transition: all .15s; }
-.react-btn:hover { border-color: var(--muted); }
+.react-row { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.react-btn {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 600; transition: all .15s; min-height: 38px;
+}
+.react-btn strong { font-size: 12px; color: inherit; }
+.react-btn:hover { transform: translateY(-1px); border-color: var(--muted); }
+.react-btn .react-icon {
+  width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; background: rgba(255,255,255,.06);
+}
+.like-btn { background: rgba(34,197,94,.08); border-color: rgba(34,197,94,.35); color: #baf7d0; }
+.like-btn .react-icon { background: rgba(34,197,94,.16); color: #83f1a6; }
+.dislike-btn { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.35); color: #ffc5c5; }
+.dislike-btn .react-icon { background: rgba(239,68,68,.14); color: #ff9b9b; }
+.share-btn { background: rgba(59,130,246,.08); border-color: rgba(59,130,246,.35); color: #cfe0ff; }
+.share-btn .react-icon { background: rgba(59,130,246,.14); color: #9fc2ff; }
 .creator-strip { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 14px 16px; margin-bottom: 16px; }
 .creator-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; overflow: hidden; }
 .creator-avatar img { width: 100%; height: 100%; object-fit: cover; }

@@ -163,9 +163,9 @@ function renderGrid(videos) {
             <p class="vtitle">${escHtml(v.title)}</p>
             ${performers ? `<div class="performer-badges">${performers}</div>` : ''}
             <div class="vmeta">
-              <span class="vcreator">${escHtml(v.category_name || '')}</span>
+              <span class="vmeta-item"><span class="mini-icon mini-tag">▣</span>${escHtml(v.category_name || 'General')}</span>
               <span class="vdivider"></span>
-              <span class="vviews">${formatViews(v.views_count)} views</span>
+              <span class="vmeta-item"><span class="mini-icon mini-view">◉</span>${formatViews(v.views_count)} views</span>
             </div>
           </div>
         </div>`;

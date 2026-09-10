@@ -55,14 +55,12 @@ function populateVideoInfo(v) {
     document.getElementById('watchViews').textContent = formatViews(v.views_count) + ' views';
     document.getElementById('watchDuration').textContent = formatDuration(v.duration_seconds);
     document.getElementById('watchCategory').textContent = v.category_name || '—';
-    document.getElementById('watchPrice').textContent = `€${parseFloat(v.price_euros).toFixed(2)}`;
     document.getElementById('likeCount').textContent = formatViews(v.likes_count);
     document.getElementById('dislikeCount').textContent = formatViews(v.dislikes_count);
     document.getElementById('watchDesc').textContent = v.description || 'No description provided.';
 
     // Paywall modal
     document.getElementById('pwVideoName').textContent = v.title;
-    document.getElementById('pwVideoPrice').textContent = `€${parseFloat(v.price_euros).toFixed(2)}`;
 
     // Creator strip
     if (v.creators && v.creators.length) {
@@ -75,7 +73,7 @@ function populateVideoInfo(v) {
             </div>
             <div>
                 <div class="creator-name">${creator.name}</div>
-                <div class="creator-sub">Instructor on XXTube</div>
+                <div class="creator-sub">Creator on XXTube</div>
             </div>
         `;
     }
@@ -334,7 +332,6 @@ async function loadRelated() {
                 <div class="rel-info">
                     <p class="rel-title">${v.title}</p>
                     <p class="rel-meta">${formatDuration(v.duration_seconds)}</p>
-                    <p class="rel-price">€${parseFloat(v.price_euros).toFixed(2)}</p>
                 </div>
             </div>
         `).join('');

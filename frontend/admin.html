@@ -53,7 +53,6 @@
       </div>
       <div class="stats-row" id="statsRow">
         <div class="stat-card"><div class="stat-val" id="statVideos">—</div><div class="stat-label">Total videos</div></div>
-        <div class="stat-card"><div class="stat-val green" id="statRevenue">—</div><div class="stat-label">Revenue today</div></div>
         <div class="stat-card"><div class="stat-val red" id="statPending">—</div><div class="stat-label">Pending now</div></div>
         <div class="stat-card"><div class="stat-val" id="statViews">—</div><div class="stat-label">Total views</div></div>
       </div>
@@ -89,7 +88,7 @@
             </select>
           </div>
           <div class="form-group"><label class="form-label">Category</label><select class="form-input" id="upCategory" title="Select video category"><option value="">— Select —</option></select></div>
-          <div class="form-group"><label class="form-label">Price (€) — set 0 for free</label><input class="form-input" type="number" id="upPrice" placeholder="12.00" step="0.50" min="0"></div>
+          <div class="form-group" style="display:none"><label class="form-label">Price (€) — set 0 for free</label><input class="form-input" type="number" id="upPrice" placeholder="12.00" step="0.50" min="0"></div>
           <div class="form-group"><label class="form-label">Tags (comma separated)</label><input class="form-input" type="text" id="upTags" placeholder="milf, pov, amateur"></div>
           <div class="form-group full"><label class="form-label">Performers</label><div id="performerChecklist" class="admin-performer-checklist"></div></div>
           <div class="form-group full admin-inline-row">
@@ -124,8 +123,8 @@
       <div class="section-card admin-table-card">
         <div class="admin-table-shell">
         <table class="vtable" id="videosTable">
-          <thead><tr><th>Thumbnail</th><th>Title</th><th>Price</th><th>Views</th><th>Duration</th><th>Actions</th></tr></thead>
-          <tbody id="videosTbody"><tr><td colspan="6" class="admin-empty-state">Loading…</td></tr></tbody>
+          <thead><tr><th>Thumbnail</th><th>Title</th><th>Views</th><th>Duration</th><th>Actions</th></tr></thead>
+          <tbody id="videosTbody"><tr><td colspan="5" class="admin-empty-state">Loading…</td></tr></tbody>
         </table>
         </div>
       </div>

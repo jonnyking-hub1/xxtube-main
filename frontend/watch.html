@@ -19,11 +19,9 @@
       <div class="pw-lock">
         <div class="lock-icon">🔒</div>
         <h2>Continue Watching</h2>
-        <p>Pay once for this video — yours to rewatch anytime</p>
       </div>
       <div class="pw-video-ref">
         <span class="pw-video-name" id="pwVideoName"></span>
-        <span class="pw-price" id="pwVideoPrice"></span>
       </div>
       <div class="pw-fields">
         <input class="pw-field" type="text" id="cardName" placeholder="Name on card" autocomplete="cc-name">
@@ -80,7 +78,7 @@
     <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" title="Open menu"><span></span><span></span><span></span></button>
     <a href="/" class="site-logo">XX<em>Tube</em></a>
     <div class="search-wrap">
-      <input type="text" placeholder="Search tutorials…" autocomplete="off">
+      <input type="text" placeholder="Search…" autocomplete="off">
       <span class="search-icon">⌕</span>
     </div>
     <div class="hdr-actions">
@@ -104,15 +102,14 @@
     <div class="watch-info">
       <h1 class="video-title-big" id="watchTitle">Loading…</h1>
       <div class="video-meta-row">
-        <span class="vmr-item" id="watchViews">— views</span>
-        <span class="vmr-item" id="watchDuration">—</span>
-        <span class="vmr-item" id="watchCategory">—</span>
-        <span class="vmr-price" id="watchPrice">—</span>
+        <span class="vmr-item"><span class="meta-icon meta-view">◉</span><span id="watchViews">— views</span></span>
+        <span class="vmr-item"><span class="meta-icon meta-duration">⏱</span><span id="watchDuration">—</span></span>
+        <span class="vmr-item"><span class="meta-icon meta-category">▣</span><span id="watchCategory">—</span></span>
       </div>
       <div class="react-row">
-        <button class="react-btn" id="likeBtn">👍 Like &nbsp;<strong id="likeCount">—</strong></button>
-        <button class="react-btn" id="dislikeBtn">👎 Dislike &nbsp;<strong id="dislikeCount">—</strong></button>
-        <button class="react-btn" id="shareBtn">↗ Share</button>
+        <button class="react-btn like-btn" id="likeBtn"><span class="react-icon">▲</span><span>Like</span><strong id="likeCount">—</strong></button>
+        <button class="react-btn dislike-btn" id="dislikeBtn"><span class="react-icon">▼</span><span>Dislike</span><strong id="dislikeCount">—</strong></button>
+        <button class="react-btn share-btn" id="shareBtn"><span class="react-icon">↗</span><span>Share</span></button>
       </div>
       <div class="creator-strip" id="creatorStrip"></div>
       <div class="desc-block" id="watchDesc">Loading video details…</div>
