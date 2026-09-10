@@ -97,4 +97,37 @@ async function createBunnyVideo(title) {
     };
 }
 
-module.exports = { generateBunnyStreamUrl, generateBunnyThumbnailUrl, createBunnyVideo };
+/**
+ * Uploads a single image buffer to Bunny Storage and returns its public CDN URL.
+ * Images are stored under /galleries/{filename} in the storage zone.
+ */
+async function uploadImageToStorage(buffer, filename, contentType) {
+    const zoneName    = process.env.BUNNY_STORAGE_ZONE_NAME;
+    const apiKey      = process.env.BUNNY_STORAGE_API_KEY;
+    const storageHost = process.env.BUNNY_STORAGE_HOSTNAME;
+    const cdnHost      = process.env.BUNNY_STORAGE_CDN_HOSTNAME;
+
+    // Sanitize filename and make it unique to avoid collisions
+    const safeName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${filename.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+    const path     = `galleries/${safeName}`;
+
+    const response = await fetch(
+        `https://${storageHost}/${zoneName}/${path}`,
+        {
+            method:  'PUT',
+            headers: {
+                'AccessKey':    apiKey,
+                'Content-Type': contentType || 'application/octet-stream',
+            },
+            body: buffer,
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`Bunny Storage upload failed: ${response.status}`);
+    }
+
+    return `https://${cdnHost}/${path}`;
+}
+
+module.exports = { generateBunnyStreamUrl, generateBunnyThumbnailUrl, createBunnyVideo, uploadImageToStorage };

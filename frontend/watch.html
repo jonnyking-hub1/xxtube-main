@@ -34,14 +34,14 @@
         </div>
         <input class="pw-field" type="email" id="payEmail" placeholder="Email — for access recovery" autocomplete="email">
       </div>
-      <div id="pwError" style="color:#e8001e;font-size:12px;margin-bottom:10px;display:none"></div>
+      <div id="pwError" class="pw-error"></div>
       <button class="pw-submit" id="pwSubmitBtn">Pay & Continue Watching</button>
       <p class="pw-secure">Secured by Tender · Card payments only</p>
       <p class="pw-recover">Already paid? <a id="pwRecoverLink">Recover your access</a></p>
     </div>
 
     <!-- Loading screen -->
-    <div id="pwLoading" style="display:none">
+    <div id="pwLoading" class="screen-hidden">
       <div class="spinner-wrap"><div class="spinner"></div></div>
       <h2>Payment in Progress</h2>
       <p>Please wait while we process your payment.<br>Do not close this window.</p>
@@ -50,7 +50,7 @@
     </div>
 
     <!-- Success screen -->
-    <div id="pwSuccess" style="display:none">
+    <div id="pwSuccess" class="screen-hidden">
       <div class="success-icon">✅</div>
       <h2>Payment Confirmed</h2>
       <p>You now have full access to this video.<br>A debit notification will arrive on your registered number shortly.</p>
@@ -69,7 +69,7 @@
     <p class="recover-or">— or —</p>
     <input class="pw-field" type="text" id="recoverRef" placeholder="Transaction reference">
     <button class="recover-submit" id="recoverSubmit">Find My Access</button>
-    <div id="recoverMsg" style="margin-top:12px;font-size:13px;text-align:center"></div>
+    <div id="recoverMsg" class="recover-msg"></div>
     <a class="recover-cancel" id="recoverCancel">Cancel</a>
   </div>
 </div>
@@ -77,7 +77,7 @@
 <!-- Header -->
 <header class="site-header">
   <div class="header-row">
-    <button class="menu-btn" id="menuBtn"><span></span><span></span><span></span></button>
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" title="Open menu"><span></span><span></span><span></span></button>
     <a href="/" class="site-logo">XX<em>Tube</em></a>
     <div class="search-wrap">
       <input type="text" placeholder="Search tutorials…" autocomplete="off">

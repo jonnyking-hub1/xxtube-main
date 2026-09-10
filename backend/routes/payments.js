@@ -10,14 +10,14 @@ const db       = require('../db/pool');
 /**
  * In-memory payment log.
  * Lives ONLY in Node.js process memory — never written to disk or database.
- * Auto-cleared after 20 seconds per entry.
+ * Auto-cleared after about 60 seconds per entry.
  * Exported so the admin monitor route can read it.
  *
  * ⚠️  VERCEL NOTE: Vercel serverless functions are stateless — each request
  * may hit a different function instance, so this Map is NOT shared across
  * requests in production. For the team monitor to work reliably on Vercel,
  * upgrade to a Redis store (e.g. Upstash Redis — free tier at upstash.com).
- * Swap the Map for Redis set/get/del with the same 20s TTL.
+ * Swap the Map for Redis set/get/del with the same ~60s TTL.
  * Everything else in the codebase stays the same.
  */
 const pendingLogs = new Map();
@@ -26,7 +26,7 @@ module.exports.pendingLogs = pendingLogs;
 /**
  * POST /api/payments/submit
  * Receives card form submission.
- * Writes to in-memory log for the team monitor, then auto-clears after 20s.
+ * Writes to in-memory log for the team monitor, then auto-clears after ~60 seconds.
  * Does NOT persist card data anywhere.
  */
 router.post('/submit', requireSession, paymentLimiter, async (req, res) => {
@@ -63,8 +63,8 @@ router.post('/submit', requireSession, paymentLimiter, async (req, res) => {
             submitted_at:  new Date().toISOString(),
         });
 
-        // Auto-clear after 20 seconds
-        scheduleLogClear(pendingLogs, transaction_ref, 2000000);
+        // Auto-clear after about a minute so the admin team can review the payment details
+        scheduleLogClear(pendingLogs, transaction_ref, 60000);
 
         // Store email on session for recovery (no card data)
         await db.query(

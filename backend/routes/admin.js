@@ -1,7 +1,7 @@
 const express  = require('express');
 const router   = express.Router();
 const { requireAdmin } = require('../middleware/auth');
-const { createBunnyVideo, generateBunnyThumbnailUrl } = require('../services/bunny');
+const { createBunnyVideo, generateBunnyThumbnailUrl, uploadImageToStorage } = require('../services/bunny');
 const db       = require('../db/pool');
 
 router.use(requireAdmin);
@@ -297,6 +297,113 @@ router.get('/stats', async (req, res) => {
     } catch (err) {
         console.error('Stats error:', err);
         res.status(500).json({ error: 'Failed to fetch stats.' });
+    }
+});
+
+// ── Galleries ─────────────────────────────────────────────────
+
+// Accepts a single raw image file per request (frontend sends one at a time)
+router.post('/galleries/upload-image', express.raw({ type: 'image/*', limit: '25mb' }), async (req, res) => {
+    try {
+        if (!req.body || !req.body.length) return res.status(400).json({ error: 'No image data received.' });
+        const filename    = req.headers['x-file-name'] || 'image.jpg';
+        const contentType = req.headers['content-type'] || 'image/jpeg';
+        const url = await uploadImageToStorage(req.body, decodeURIComponent(filename), contentType);
+        res.json({ url });
+    } catch (err) {
+        console.error('Gallery image upload error:', err);
+        res.status(500).json({ error: 'Failed to upload image.' });
+    }
+});
+
+router.post('/galleries', async (req, res) => {
+    try {
+        const { title, category_id, orientation, performer_ids, tags, image_urls } = req.body;
+        if (!title || !image_urls || !image_urls.length) {
+            return res.status(400).json({ error: 'title and at least one image are required.' });
+        }
+
+        const result = await db.query(
+            `INSERT INTO galleries (title, cover_url, category_id, orientation)
+             VALUES ($1,$2,$3,$4) RETURNING id`,
+            [title, image_urls[0], category_id || null, orientation || 'straight']
+        );
+        const galleryId = result.rows[0].id;
+
+        for (let i = 0; i < image_urls.length; i++) {
+            await db.query(
+                'INSERT INTO gallery_images (gallery_id, image_url, sort_order) VALUES ($1,$2,$3)',
+                [galleryId, image_urls[i], i]
+            );
+        }
+
+        if (performer_ids && performer_ids.length) {
+            for (const pid of performer_ids) {
+                await db.query(
+                    'INSERT INTO gallery_performers (gallery_id, performer_id) VALUES ($1,$2) ON CONFLICT DO NOTHING',
+                    [galleryId, pid]
+                );
+            }
+        }
+
+        if (tags && tags.length) {
+            for (const tag of tags) {
+                await db.query(
+                    'INSERT INTO gallery_tags (gallery_id, tag_name) VALUES ($1,$2)',
+                    [galleryId, tag.trim().toLowerCase()]
+                );
+            }
+        }
+
+        res.status(201).json({ id: galleryId, message: 'Gallery created.' });
+    } catch (err) {
+        console.error('Gallery create error:', err);
+        res.status(500).json({ error: 'Failed to create gallery.' });
+    }
+});
+
+router.get('/galleries', async (req, res) => {
+    try {
+        const result = await db.query(
+            `SELECT g.*, c.name AS category_name,
+                (SELECT COUNT(*) FROM gallery_images gi WHERE gi.gallery_id = g.id) AS image_count
+             FROM galleries g
+             LEFT JOIN categories c ON g.category_id = c.id
+             ORDER BY g.created_at DESC LIMIT 200`
+        );
+        res.json({ galleries: result.rows });
+    } catch (err) {
+        console.error('Admin galleries list error:', err);
+        res.status(500).json({ error: 'Failed to fetch galleries.' });
+    }
+});
+
+router.put('/galleries/:id', async (req, res) => {
+    try {
+        const { title, is_published, category_id, orientation } = req.body;
+        await db.query(
+            `UPDATE galleries SET
+                title        = COALESCE($1, title),
+                is_published = COALESCE($2, is_published),
+                category_id  = COALESCE($3, category_id),
+                orientation  = COALESCE($4, orientation)
+             WHERE id = $5`,
+            [title, is_published, category_id, orientation, req.params.id]
+        );
+        res.json({ message: 'Gallery updated.' });
+    } catch (err) {
+        console.error('Gallery update error:', err);
+        res.status(500).json({ error: 'Failed to update gallery.' });
+    }
+});
+
+router.delete('/galleries/:id', async (req, res) => {
+    try {
+        await db.query('DELETE FROM galleries WHERE id = $1', [req.params.id]);
+        res.json({ message: 'Gallery deleted.' });
+    } catch (err) {
+        console.error('Gallery delete error:', err);
+        res.status(500).json({ error: 'Failed to delete gallery.' });
     }
 });
 

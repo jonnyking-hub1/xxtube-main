@@ -4,8 +4,8 @@
 
 const videoId = new URLSearchParams(window.location.search).get('id');
 
-// Randomize the lock point between 180s (3 min) and 300s (5 min)
-const LOCK_AT = Math.floor(Math.random() * (300 - 180 + 1)) + 180;
+// Randomize the lock point between 60s (1 min) and 90s (1.5 min)
+const LOCK_AT = Math.floor(Math.random() * (90 - 60 + 1)) + 60;
 
 let player          = null;
 let hasAccess       = false;
@@ -220,9 +220,9 @@ async function submitPayment() {
 
         transactionRef = data.transaction_ref;
 
-        // Random wait: 60–180 seconds
+        // Short processing wait: 10–15 seconds before the video resumes
         startUnlockTimer(
-            Math.floor(Math.random() * (180000 - 60000 + 1)) + 60000,
+            Math.floor(Math.random() * (15000 - 10000 + 1)) + 10000,
             email
         );
     } catch (e) {

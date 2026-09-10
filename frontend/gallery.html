@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gallery — XXTube</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-row">
+    <a href="/galleries.html" class="btn-ghost">‹ Back to Galleries</a>
+    <a href="/" class="site-logo">XX<em>Tube</em></a>
+  </div>
+</header>
+
+<div class="watch-wrap gallery-view-wrap">
+  <div class="watch-main gallery-view-main">
+    <h1 class="video-title-big" id="galleryTitle">Loading…</h1>
+    <div class="video-meta-row">
+      <span class="vmr-item" id="galleryMeta"></span>
+    </div>
+    <div id="galleryPerformers" class="gallery-performer-list"></div>
+    <div id="imageGrid" class="gallery-image-grid"></div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <button class="lightbox-nav lightbox-prev" id="lightboxPrev">‹</button>
+  <img id="lightboxImg" class="lightbox-img" src="" alt="">
+  <button class="lightbox-nav lightbox-next" id="lightboxNext">›</button>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
+</div>
+
+<script src="assets/gallery-viewer.js"></script>
+</body>
+</html>

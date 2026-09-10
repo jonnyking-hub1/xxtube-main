@@ -138,9 +138,6 @@ function renderGrid(videos) {
         const performers = v.performers && v.performers.length
             ? v.performers.map(p => `<span class="performer-badge">${escHtml(p.name)}</span>`).join('')
             : '';
-        const price = parseFloat(v.price_euros) === 0
-            ? `<span class="vbadge vbadge-free">FREE</span>`
-            : `<span class="vbadge vbadge-price">€${parseFloat(v.price_euros).toFixed(2)}</span>`;
         const vrBadge      = v.is_vr     ? `<span class="vbadge vbadge-vr">VR</span>`         : '';
         const amateurBadge = v.is_amateur ? `<span class="vbadge vbadge-amateur">Amateur</span>` : '';
         const thumb        = v.thumbnail_url || '';
@@ -159,7 +156,6 @@ function renderGrid(videos) {
               <div style="display:flex;gap:3px">${vrBadge}${amateurBadge}</div>
               <div style="display:flex;gap:3px">
                 <span class="vbadge vbadge-dur">${formatDuration(v.duration_seconds)}</span>
-                ${price}
               </div>
             </div>
           </div>

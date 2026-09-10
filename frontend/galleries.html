@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XXTube — Premium Adult Streaming</title>
+<title>Photo Galleries — XXTube</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -30,7 +30,7 @@
     <button class="drawer-close" id="drawerClose">✕</button>
   </div>
   <div class="drawer-sec">
-    <a href="/galleries.html" class="d-item nav-link">🖼 Photo Galleries</a>
+    <a href="/" class="d-item nav-link">🎬 Videos</a>
   </div>
   <div class="drawer-sec">
     <h4>Orientation</h4>
@@ -38,13 +38,9 @@
     <div class="d-item" data-orientation="gay" id="dGay"><span class="d-dot off"></span> Gay</div>
     <div class="d-item" data-orientation="trans" id="dTrans"><span class="d-dot off"></span> Trans</div>
   </div>
-  <div class="drawer-sec">
+  <div class="drawer-sec no-border">
     <h4>Categories</h4>
     <div id="drawerCategories"></div>
-  </div>
-  <div class="drawer-sec no-border">
-    <h4>Performers</h4>
-    <div id="drawerPerformers"></div>
   </div>
 </div>
 
@@ -56,11 +52,8 @@
     </button>
     <a href="/" class="site-logo">XX<em>Tube</em></a>
     <div class="search-wrap">
-      <input type="text" id="searchInput" placeholder="Search videos, performers, tags…" autocomplete="off">
+      <input type="text" id="searchInput" placeholder="Search galleries…" autocomplete="off">
       <span class="search-icon">⌕</span>
-    </div>
-    <div class="hdr-actions">
-      <button class="btn-ghost" id="recoverBtn">Recover Access</button>
     </div>
   </div>
 
@@ -87,26 +80,12 @@
         <button class="fpill active" data-cat="">All</button>
       </div>
       <p class="grid-label" id="gridLabel">Loading…</p>
-      <div class="vgrid" id="videoGrid"></div>
+      <div class="vgrid" id="galleryGrid"></div>
       <div class="pagination" id="pagination"></div>
     </main>
   </div>
 </div>
 
-<!-- Recover Modal -->
-<div class="modal-backdrop" id="recoverModal">
-  <div class="recover-box">
-    <h2>Recover Your Access</h2>
-    <p>Enter the email you used when paying, or your transaction reference.</p>
-    <input class="pw-field" type="email" id="recoverEmail" placeholder="Email address you paid with">
-    <p class="recover-or">— or —</p>
-    <input class="pw-field" type="text" id="recoverRef" placeholder="Transaction reference">
-    <button class="recover-submit" id="recoverSubmit">Find My Access</button>
-    <div id="recoverMsg" class="recover-msg"></div>
-    <a class="recover-cancel" id="recoverCancel">Cancel</a>
-  </div>
-</div>
-
-<script src="assets/app.js"></script>
+<script src="assets/galleries.js"></script>
 </body>
 </html>

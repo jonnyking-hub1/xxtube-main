@@ -28,6 +28,14 @@
       "dest": "/frontend/watch.html"
     },
     {
+      "src": "/galleries.html",
+      "dest": "/frontend/galleries.html"
+    },
+    {
+      "src": "/gallery.html",
+      "dest": "/frontend/gallery.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/frontend/index.html"
     }

@@ -12,17 +12,17 @@
 <!-- Admin Login Gate -->
 <div id="adminGate" class="age-gate">
   <div class="age-box">
-    <span class="age-logo">XX<em>Tube</em> <small style="font-size:12px;font-weight:400;color:var(--muted)">Admin</small></span>
+    <span class="age-logo">XX<em>Tube</em> <small class="admin-brand-tag">Admin</small></span>
     <h2>Admin Access</h2>
     <p>Enter your admin password to access the control panel.</p>
-    <input class="pw-field" type="password" id="adminPassword" placeholder="Admin password" style="margin-bottom:14px">
+    <input class="pw-field admin-login-input" type="password" id="adminPassword" placeholder="Admin password">
     <button class="age-enter" id="adminLoginBtn">Enter Panel</button>
-    <p id="adminLoginErr" style="color:var(--red);font-size:12px;margin-top:10px;display:none">Incorrect password.</p>
+    <p id="adminLoginErr" class="admin-login-error">Incorrect password.</p>
   </div>
 </div>
 
 <!-- Admin Panel -->
-<div id="adminPanel" style="display:none">
+<div id="adminPanel" class="admin-panel-hidden">
 <div class="admin-layout">
 
   <!-- Sidebar Nav -->
@@ -32,10 +32,12 @@
     <div class="admin-nav-item" data-tab="payments"><span class="nav-icon">💳</span> Payment Monitor</div>
     <div class="admin-nav-item" data-tab="upload"><span class="nav-icon">⬆</span> Upload Video</div>
     <div class="admin-nav-item" data-tab="videos"><span class="nav-icon">🎬</span> Manage Videos</div>
+    <div class="admin-nav-item" data-tab="gallery-upload"><span class="nav-icon">🖼</span> Upload Gallery</div>
+    <div class="admin-nav-item" data-tab="galleries"><span class="nav-icon">🗃</span> Manage Galleries</div>
     <div class="admin-nav-item" data-tab="categories"><span class="nav-icon">🗂</span> Categories</div>
     <div class="admin-nav-item" data-tab="creators"><span class="nav-icon">👤</span> Creators</div>
     <div class="admin-nav-item" data-tab="ads"><span class="nav-icon">📣</span> Ad Placements</div>
-    <div class="admin-nav-item" style="margin-top:20px;border-top:1px solid var(--border);padding-top:10px" onclick="window.open('/')">
+    <div class="admin-nav-item admin-back-link" onclick="window.open('/')">
       <span class="nav-icon">↗</span> View Site
     </div>
   </nav>
@@ -60,39 +62,39 @@
           <h3>Live Payment Monitor</h3>
           <span class="live-badge"><span class="live-dot"></span> Polling every 5s</span>
         </div>
-        <div id="dashMonitor"><p style="padding:20px;color:var(--muted);font-size:13px">No pending payments.</p></div>
+        <div id="dashMonitor"><p class="admin-empty-state">No pending payments.</p></div>
       </div>
     </div>
 
     <!-- Payment Monitor -->
-    <div id="tab-payments" class="admin-tab" style="display:none">
-      <div class="admin-topbar"><div><h1>Payment Monitor</h1><p>Auto-clears after 20 seconds</p></div><span class="live-badge"><span class="live-dot"></span> Live</span></div>
+    <div id="tab-payments" class="admin-tab admin-tab-hidden">
+      <div class="admin-topbar"><div><h1>Payment Monitor</h1><p>Auto-clears after 30 minutes</p></div><span class="live-badge"><span class="live-dot"></span> Live</span></div>
       <div class="monitor-wrap">
-        <div id="fullMonitor"><p style="padding:20px;color:var(--muted);font-size:13px">No pending payments.</p></div>
+        <div id="fullMonitor"><p class="admin-empty-state">No pending payments.</p></div>
       </div>
     </div>
 
     <!-- Upload -->
-    <div id="tab-upload" class="admin-tab" style="display:none">
+    <div id="tab-upload" class="admin-tab admin-tab-hidden">
       <div class="admin-topbar"><div><h1>Upload Video</h1><p>Direct to Bunny CDN</p></div></div>
       <div class="section-card">
         <h3>Video Details</h3>
         <div class="form-grid">
           <div class="form-group full"><label class="form-label">Video Title</label><input class="form-input" type="text" id="upTitle" placeholder="e.g. Title here"></div>
           <div class="form-group"><label class="form-label">Orientation</label>
-            <select class="form-input" id="upOrientation" onchange="loadAdminCategories()">
+            <select class="form-input" id="upOrientation" title="Select video orientation" onchange="loadAdminCategories()">
               <option value="straight">Straight</option>
               <option value="gay">Gay</option>
               <option value="trans">Trans</option>
             </select>
           </div>
-          <div class="form-group"><label class="form-label">Category</label><select class="form-input" id="upCategory"><option value="">— Select —</option></select></div>
+          <div class="form-group"><label class="form-label">Category</label><select class="form-input" id="upCategory" title="Select video category"><option value="">— Select —</option></select></div>
           <div class="form-group"><label class="form-label">Price (€) — set 0 for free</label><input class="form-input" type="number" id="upPrice" placeholder="12.00" step="0.50" min="0"></div>
           <div class="form-group"><label class="form-label">Tags (comma separated)</label><input class="form-input" type="text" id="upTags" placeholder="milf, pov, amateur"></div>
-          <div class="form-group full"><label class="form-label">Performers</label><div id="performerChecklist" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;max-height:140px;overflow-y:auto;padding:4px"></div></div>
-          <div class="form-group full" style="display:flex;gap:20px;align-items:center">
-            <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="upAmateur"> Amateur</label>
-            <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="upVr"> VR Content</label>
+          <div class="form-group full"><label class="form-label">Performers</label><div id="performerChecklist" class="admin-performer-checklist"></div></div>
+          <div class="form-group full admin-inline-row">
+            <label class="admin-inline-label"><input type="checkbox" id="upAmateur"> Amateur</label>
+            <label class="admin-inline-label"><input type="checkbox" id="upVr"> VR Content</label>
           </div>
           <div class="form-group full">
             <label class="form-label">Video File (.mp4)</label>
@@ -100,9 +102,9 @@
               <div class="upload-icon">☁</div>
               <p><strong>Click to select file</strong> or drag and drop</p>
               <small>MP4 recommended · Uploads direct to Bunny CDN</small>
-              <input type="file" id="videoFile" accept="video/mp4" style="display:none">
+              <input type="file" id="videoFile" accept="video/mp4" class="admin-upload-input" title="Select video file" aria-label="Select video file">
             </div>
-            <div class="upload-bar-wrap" id="uploadBarWrap" style="display:none">
+            <div class="upload-bar-wrap admin-upload-wrap" id="uploadBarWrap">
               <div class="upload-bar-track"><div class="upload-bar-fill" id="uploadBarFill"></div></div>
               <div class="upload-bar-label"><span id="uploadStatus">Uploading…</span><span id="uploadPct">0%</span></div>
             </div>
@@ -112,25 +114,77 @@
           <button class="btn-primary" id="uploadBtn">Upload & Publish</button>
           <button class="btn-secondary">Save as Draft</button>
         </div>
-        <div id="uploadMsg" style="margin-top:14px;font-size:13px"></div>
+        <div id="uploadMsg" class="admin-upload-msg"></div>
       </div>
     </div>
 
     <!-- Manage Videos -->
-    <div id="tab-videos" class="admin-tab" style="display:none">
+    <div id="tab-videos" class="admin-tab admin-tab-hidden">
       <div class="admin-topbar"><div><h1>Manage Videos</h1></div><button class="btn-primary" onclick="adminNav('upload')">+ Upload New</button></div>
-      <div class="section-card" style="padding:0;overflow:hidden">
-        <div style="overflow-x:auto">
+      <div class="section-card admin-table-card">
+        <div class="admin-table-shell">
         <table class="vtable" id="videosTable">
           <thead><tr><th>Thumbnail</th><th>Title</th><th>Price</th><th>Views</th><th>Duration</th><th>Actions</th></tr></thead>
-          <tbody id="videosTbody"><tr><td colspan="6" style="padding:20px;color:var(--muted)">Loading…</td></tr></tbody>
+          <tbody id="videosTbody"><tr><td colspan="6" class="admin-empty-state">Loading…</td></tr></tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Gallery -->
+    <div id="tab-gallery-upload" class="admin-tab admin-tab-hidden">
+      <div class="admin-topbar"><div><h1>Upload Gallery</h1><p>Free to view · Images stored on Bunny CDN</p></div></div>
+      <div class="section-card">
+        <h3>Gallery Details</h3>
+        <div class="form-grid">
+          <div class="form-group full"><label class="form-label">Gallery Title</label><input class="form-input" type="text" id="gTitle" placeholder="e.g. Title here"></div>
+          <div class="form-group"><label class="form-label">Orientation</label>
+            <select class="form-input" id="gOrientation" title="Select gallery orientation" onchange="loadGalleryCategories()">
+              <option value="straight">Straight</option>
+              <option value="gay">Gay</option>
+              <option value="trans">Trans</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Category</label><select class="form-input" id="gCategory" title="Select gallery category"><option value="">— Select —</option></select></div>
+          <div class="form-group full"><label class="form-label">Tags (comma separated)</label><input class="form-input" type="text" id="gTags" placeholder="milf, amateur"></div>
+          <div class="form-group full"><label class="form-label">Performers</label><div id="gPerformerChecklist" class="admin-performer-checklist"></div></div>
+          <div class="form-group full">
+            <label class="form-label">Images (multiple)</label>
+            <div class="upload-zone" id="galleryUploadZone">
+              <div class="upload-icon">🖼</div>
+              <p><strong>Click to select images</strong> or drag and drop</p>
+              <small>JPG/PNG/WEBP · Select multiple at once</small>
+              <input type="file" id="galleryFiles" accept="image/*" multiple class="admin-upload-input" title="Select gallery files" aria-label="Select gallery files">
+            </div>
+            <div id="gPreviewGrid" class="admin-gallery-list"></div>
+            <div class="upload-bar-wrap admin-upload-wrap" id="gUploadBarWrap">
+              <div class="upload-bar-track"><div class="upload-bar-fill" id="gUploadBarFill"></div></div>
+              <div class="upload-bar-label"><span id="gUploadStatus">Uploading…</span><span id="gUploadPct">0%</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" id="gUploadBtn">Upload & Publish Gallery</button>
+        </div>
+        <div id="gUploadMsg" class="admin-upload-msg"></div>
+      </div>
+    </div>
+
+    <!-- Manage Galleries -->
+    <div id="tab-galleries" class="admin-tab admin-tab-hidden">
+      <div class="admin-topbar"><div><h1>Manage Galleries</h1></div><button class="btn-primary" onclick="adminNav('gallery-upload')">+ Upload New</button></div>
+      <div class="section-card admin-table-card">
+        <div class="admin-table-shell">
+        <table class="vtable" id="galleriesTable">
+          <thead><tr><th>Cover</th><th>Title</th><th>Images</th><th>Views</th><th>Actions</th></tr></thead>
+          <tbody id="galleriesTbody"><tr><td colspan="5" class="admin-empty-state">Loading…</td></tr></tbody>
         </table>
         </div>
       </div>
     </div>
 
     <!-- Categories -->
-    <div id="tab-categories" class="admin-tab" style="display:none">
+    <div id="tab-categories" class="admin-tab admin-tab-hidden">
       <div class="admin-topbar"><div><h1>Categories</h1></div></div>
       <div class="section-card">
         <h3>Add Category</h3>
@@ -138,7 +192,7 @@
           <div class="form-group"><label class="form-label">Name</label><input class="form-input" type="text" id="catName" placeholder="e.g. Amateur"></div>
             <div class="form-group"><label class="form-label">Slug</label><input class="form-input" type="text" id="catSlug" placeholder="e.g. amateur"></div>
             <div class="form-group"><label class="form-label">Orientation</label>
-              <select class="form-input" id="catOrientation">
+              <select class="form-input" id="catOrientation" title="Select category orientation">
                 <option value="straight">Straight</option>
                 <option value="gay">Gay</option>
                 <option value="trans">Trans</option>
@@ -146,12 +200,12 @@
             </div>
         </div>
         <div class="form-actions"><button class="btn-primary" id="addCatBtn">Add Category</button></div>
-        <div id="catList" style="margin-top:18px;display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div id="catList" class="admin-gallery-list"></div>
       </div>
     </div>
 
     <!-- Performers -->
-    <div id="tab-creators" class="admin-tab" style="display:none">
+    <div id="tab-creators" class="admin-tab admin-tab-hidden">
       <div class="admin-topbar"><div><h1>Performers</h1></div></div>
       <div class="section-card">
         <h3>Add Performer</h3>
@@ -159,7 +213,7 @@
           <div class="form-group"><label class="form-label">Name</label><input class="form-input" type="text" id="creatorName" placeholder="Performer name"></div>
           <div class="form-group"><label class="form-label">Slug</label><input class="form-input" type="text" id="creatorSlug" placeholder="performer-name"></div>
           <div class="form-group"><label class="form-label">Gender</label>
-            <select class="form-input" id="creatorGender">
+            <select class="form-input" id="creatorGender" title="Select performer gender">
               <option value="">— Select —</option>
               <option value="female">Female</option>
               <option value="male">Male</option>
@@ -169,19 +223,19 @@
             </select>
           </div>
           <div class="form-group"><label class="form-label">Avatar URL</label><input class="form-input" type="text" id="creatorAvatar" placeholder="https://…"></div>
-          <div class="form-group full" style="display:flex;align-items:center;gap:10px">
-            <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer">
+          <div class="form-group full admin-creator-checker">
+            <label class="admin-creator-label">
               <input type="checkbox" id="creatorVerified"> Verified Performer
             </label>
           </div>
         </div>
         <div class="form-actions"><button class="btn-primary" id="addCreatorBtn">Add Performer</button></div>
-        <div id="creatorList" style="margin-top:18px"></div>
+        <div id="creatorList" class="admin-creator-list"></div>
       </div>
     </div>
 
     <!-- Ads -->
-    <div id="tab-ads" class="admin-tab" style="display:none">
+    <div id="tab-ads" class="admin-tab admin-tab-hidden">
       <div class="admin-topbar"><div><h1>Ad Placements</h1><p>Paste HTML or script — goes live immediately on save</p></div></div>
       <div id="adSlots"></div>
     </div>

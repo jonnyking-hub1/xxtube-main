@@ -45,9 +45,10 @@ app.use('/api/', apiLimiter);
 // ── API Routes ────────────────────────────────────────────────
 app.use('/api/sessions',   require('./routes/sessions'));
 app.use('/api/videos',     require('./routes/videos'));
+app.use('/api/galleries',  require('./routes/galleries'));
 app.use('/api/payments',   require('./routes/payments'));
 app.use('/api/categories', require('./routes/categories'));
-app.use('/api/performers', require('./routes/categories'));
+app.use('/api/performers', require('./routes/performers'));
 app.use('/api/admin',      require('./routes/admin'));
 
 // ── Static Frontend ───────────────────────────────────────────

