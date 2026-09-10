@@ -57,7 +57,7 @@ function populateVideoInfo(v) {
     document.getElementById('watchCategory').textContent = v.category_name || '—';
     document.getElementById('likeCount').textContent = formatViews(v.likes_count);
     document.getElementById('dislikeCount').textContent = formatViews(v.dislikes_count);
-    document.getElementById('watchDesc').textContent = v.description || 'No description provided.';
+    document.getElementById('watchDesc').textContent = v.description || '';
 
     // Paywall modal
     document.getElementById('pwVideoName').textContent = v.title;
