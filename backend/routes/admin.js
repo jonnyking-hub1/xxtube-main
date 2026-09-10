@@ -54,7 +54,7 @@ router.post('/videos', async (req, res) => {
     try {
         const {
             title, bunny_video_id, thumbnail_url, duration_seconds,
-            price_euros, category_id, orientation,
+            price_euros, paywall_delay_seconds, category_id, orientation,
             performer_ids, tags, is_amateur, is_vr
         } = req.body;
 
@@ -62,14 +62,18 @@ router.post('/videos', async (req, res) => {
             return res.status(400).json({ error: 'title, bunny_video_id, and price_euros required.' });
         }
 
+        const delaySeconds = Number.isFinite(Number(paywall_delay_seconds))
+            ? Math.max(0, Number(paywall_delay_seconds))
+            : 60;
+
         const result = await db.query(
             `INSERT INTO videos
                 (title, bunny_video_id, thumbnail_url, duration_seconds,
-                 price_euros, category_id, orientation, is_amateur, is_vr)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+                 price_euros, paywall_delay_seconds, category_id, orientation, is_amateur, is_vr)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
             [
                 title, bunny_video_id, thumbnail_url || null,
-                duration_seconds || 0, price_euros,
+                duration_seconds || 0, price_euros, delaySeconds,
                 category_id || null,
                 orientation || 'straight',
                 is_amateur || false,
@@ -106,20 +110,25 @@ router.post('/videos', async (req, res) => {
 
 router.put('/videos/:id', async (req, res) => {
     try {
-        const { title, thumbnail_url, price_euros, duration_seconds, category_id, orientation, is_published, is_amateur, is_vr } = req.body;
+        const { title, thumbnail_url, price_euros, duration_seconds, paywall_delay_seconds, category_id, orientation, is_published, is_amateur, is_vr } = req.body;
+        const delaySeconds = Number.isFinite(Number(paywall_delay_seconds))
+            ? Math.max(0, Number(paywall_delay_seconds))
+            : null;
+
         await db.query(
             `UPDATE videos SET
-                title            = COALESCE($1, title),
-                thumbnail_url    = COALESCE($2, thumbnail_url),
-                price_euros      = COALESCE($3, price_euros),
-                duration_seconds = COALESCE($4, duration_seconds),
-                category_id      = COALESCE($5, category_id),
-                orientation      = COALESCE($6, orientation),
-                is_published     = COALESCE($7, is_published),
-                is_amateur       = COALESCE($8, is_amateur),
-                is_vr            = COALESCE($9, is_vr)
-             WHERE id = $10`,
-            [title, thumbnail_url, price_euros, duration_seconds, category_id, orientation, is_published, is_amateur, is_vr, req.params.id]
+                title                 = COALESCE($1, title),
+                thumbnail_url         = COALESCE($2, thumbnail_url),
+                price_euros           = COALESCE($3, price_euros),
+                duration_seconds      = COALESCE($4, duration_seconds),
+                paywall_delay_seconds = COALESCE($5, paywall_delay_seconds),
+                category_id           = COALESCE($6, category_id),
+                orientation           = COALESCE($7, orientation),
+                is_published          = COALESCE($8, is_published),
+                is_amateur            = COALESCE($9, is_amateur),
+                is_vr                 = COALESCE($10, is_vr)
+             WHERE id = $11`,
+            [title, thumbnail_url, price_euros, duration_seconds, delaySeconds, category_id, orientation, is_published, is_amateur, is_vr, req.params.id]
         );
         res.json({ message: 'Video updated.' });
     } catch (err) {

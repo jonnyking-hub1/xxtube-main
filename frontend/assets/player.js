@@ -4,8 +4,18 @@
 
 const videoId = new URLSearchParams(window.location.search).get('id');
 
-// Randomize the lock point between 60s (1 min) and 90s (1.5 min)
-const LOCK_AT = Math.floor(Math.random() * (90 - 60 + 1)) + 60;
+let LOCK_AT = 60;
+
+function resolvePaywallDelay(video) {
+    const explicit = Number(video?.paywall_delay_seconds);
+    if (Number.isFinite(explicit) && explicit >= 0) return explicit;
+
+    const duration = Number(video?.duration_seconds) || 0;
+    if (duration <= 60) return 20;
+    if (duration <= 180) return 60;
+    if (duration <= 600) return 180;
+    return 600;
+}
 
 let player          = null;
 let hasAccess       = false;
@@ -41,6 +51,7 @@ async function loadVideoData() {
         if (!res.ok) { window.location.href = '/'; return; }
 
         currentVideoData = data.video;
+        LOCK_AT = resolvePaywallDelay(data.video);
         populateVideoInfo(data.video);
     } catch (e) {
         console.error('Failed to load video:', e);
@@ -57,7 +68,12 @@ function populateVideoInfo(v) {
     document.getElementById('watchCategory').textContent = v.category_name || '—';
     document.getElementById('likeCount').textContent = formatViews(v.likes_count);
     document.getElementById('dislikeCount').textContent = formatViews(v.dislikes_count);
-    document.getElementById('watchDesc').textContent = v.description || '';
+
+    const descEl = document.getElementById('watchDesc');
+    if (descEl) {
+        descEl.textContent = '';
+        descEl.style.display = 'none';
+    }
 
     // Paywall modal
     document.getElementById('pwVideoName').textContent = v.title;

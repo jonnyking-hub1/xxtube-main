@@ -5,6 +5,14 @@
 let ADMIN_SECRET  = '';
 let monitorInterval = null;
 
+function getRecommendedPaywallDelay(durationSeconds) {
+    const seconds = Number(durationSeconds) || 0;
+    if (seconds <= 60) return 20;
+    if (seconds <= 180) return 60;
+    if (seconds <= 600) return 180;
+    return 600;
+}
+
 // ── Boot ──────────────────────────────────────────────────────
 document.getElementById('adminLoginBtn')?.addEventListener('click', attemptLogin);
 document.getElementById('adminPassword')?.addEventListener('keydown', e => {
@@ -233,6 +241,18 @@ function handleFileSelect(e) {
     if (selectedFile) {
         document.querySelector('#uploadZone p').innerHTML =
             `<strong>${esc(selectedFile.name)}</strong>`;
+
+        const fileUrl = URL.createObjectURL(selectedFile);
+        const tempVideo = document.createElement('video');
+        tempVideo.preload = 'metadata';
+        tempVideo.src = fileUrl;
+        tempVideo.onloadedmetadata = () => {
+            const delayInput = document.getElementById('upPaywallDelay');
+            if (delayInput) {
+                delayInput.value = getRecommendedPaywallDelay(tempVideo.duration);
+            }
+            URL.revokeObjectURL(fileUrl);
+        };
     }
 }
 
@@ -242,6 +262,7 @@ async function startUpload() {
     const catId       = document.getElementById('upCategory').value;
     const orientation = document.getElementById('upOrientation').value;
     const tags        = document.getElementById('upTags').value;
+    const paywallDelay = Number(document.getElementById('upPaywallDelay').value);
     const isAmateur   = document.getElementById('upAmateur').checked;
     const isVr        = document.getElementById('upVr').checked;
     const msgEl       = document.getElementById('uploadMsg');
@@ -265,10 +286,13 @@ async function startUpload() {
         await uploadToBunny(selectedFile, bunny, title);
 
         const tagList = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+        const safeDelay = Number.isFinite(paywallDelay) ? Math.max(0, Math.round(paywallDelay)) : 60;
+
         await api('POST', '/api/admin/videos', {
             title,
             bunny_video_id: bunny.videoId,
             price_euros:    parseFloat(price),
+            paywall_delay_seconds: safeDelay,
             category_id:    catId || null,
             orientation,
             performer_ids:  performerIds,
