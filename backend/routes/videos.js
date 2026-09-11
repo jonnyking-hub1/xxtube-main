@@ -232,23 +232,52 @@ router.get('/:id/stream', requireSession, async (req, res) => {
 
 /**
  * GET /api/videos/:id/related
+ * Prioritizes same category + tag matches, then orientation, then recent popularity.
  */
 router.get('/:id/related', async (req, res) => {
     try {
         const video = await db.query(
-            'SELECT category_id, orientation FROM videos WHERE id = $1',
+            `SELECT v.category_id, v.orientation,
+                    COALESCE(array_agg(DISTINCT vt.tag_name) FILTER (WHERE vt.tag_name IS NOT NULL), ARRAY[]::text[]) AS tags
+             FROM videos v
+             LEFT JOIN video_tags vt ON vt.video_id = v.id
+             WHERE v.id = $1
+             GROUP BY v.id`,
             [req.params.id]
         );
         if (!video.rows.length) return res.json({ videos: [] });
 
-        const { category_id, orientation } = video.rows[0];
+        const current = video.rows[0];
+        const tags = current.tags || [];
+
         const result = await db.query(
-            `SELECT id, title, thumbnail_url, bunny_video_id, duration_seconds, price_euros, views_count, is_vr, is_amateur
-             FROM videos
-             WHERE (category_id = $1 OR orientation = $2) AND id != $3 AND is_published = TRUE
-             ORDER BY views_count DESC LIMIT 6`,
-            [category_id, orientation, req.params.id]
+            `SELECT
+                v.id, v.title, v.thumbnail_url, v.bunny_video_id, v.duration_seconds,
+                v.price_euros, v.views_count, v.is_vr, v.is_amateur,
+                (
+                    CASE WHEN v.category_id = $1 THEN 5 ELSE 0 END +
+                    CASE WHEN v.orientation = $2 THEN 2 ELSE 0 END +
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM video_tags vt2
+                        WHERE vt2.video_id = v.id AND vt2.tag_name = ANY($3::text[])
+                    ) THEN 4 ELSE 0 END +
+                    CASE WHEN v.created_at > NOW() - INTERVAL '30 days' THEN 1 ELSE 0 END
+                ) AS score
+             FROM videos v
+             WHERE v.id != $4 AND v.is_published = TRUE
+               AND (
+                    v.category_id = $1
+                    OR v.orientation = $2
+                    OR EXISTS (
+                        SELECT 1 FROM video_tags vt3
+                        WHERE vt3.video_id = v.id AND vt3.tag_name = ANY($3::text[])
+                    )
+               )
+             ORDER BY score DESC, v.views_count DESC
+             LIMIT 6`,
+            [current.category_id, current.orientation, tags, req.params.id]
         );
+
         res.json({ videos: result.rows.map(withSignedThumbnail) });
     } catch (err) {
         console.error('Related error:', err);
