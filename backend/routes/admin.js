@@ -58,8 +58,10 @@ router.post('/videos', async (req, res) => {
             performer_ids, tags, is_amateur, is_vr
         } = req.body;
 
-        if (!title || !bunny_video_id || price_euros === undefined) {
-            return res.status(400).json({ error: 'title, bunny_video_id, and price_euros required.' });
+        const normalizedPrice = Number.isFinite(Number(price_euros)) ? Number(price_euros) : 0;
+
+        if (!title || !bunny_video_id) {
+            return res.status(400).json({ error: 'title and bunny_video_id required.' });
         }
 
         const delaySeconds = Number.isFinite(Number(paywall_delay_seconds))
@@ -73,7 +75,7 @@ router.post('/videos', async (req, res) => {
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
             [
                 title, bunny_video_id, thumbnail_url || null,
-                duration_seconds || 0, price_euros, delaySeconds,
+                duration_seconds || 0, normalizedPrice, delaySeconds,
                 category_id || null,
                 orientation || 'straight',
                 is_amateur || false,

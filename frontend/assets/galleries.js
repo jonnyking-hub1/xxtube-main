@@ -102,7 +102,6 @@ function renderGrid(galleries) {
               <div></div>
               <div style="display:flex;gap:3px">
                 <span class="vbadge vbadge-dur">${g.image_count} photos</span>
-                <span class="vbadge vbadge-free">FREE</span>
               </div>
             </div>
           </div>

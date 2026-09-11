@@ -266,6 +266,7 @@ async function startUpload() {
     const isAmateur   = document.getElementById('upAmateur').checked;
     const isVr        = document.getElementById('upVr').checked;
     const msgEl       = document.getElementById('uploadMsg');
+    const normalizedPrice = Number.isFinite(Number(price)) ? Number(price) : 0;
 
     // Collect checked performers
     const performerIds = Array.from(
@@ -273,7 +274,6 @@ async function startUpload() {
     ).map(el => el.value);
 
     if (!title)        { msgEl.style.color='var(--red)'; msgEl.textContent='Title is required.'; return; }
-    if (!price)        { msgEl.style.color='var(--red)'; msgEl.textContent='Price is required.'; return; }
     if (!selectedFile) { msgEl.style.color='var(--red)'; msgEl.textContent='Select a video file first.'; return; }
 
     try {
@@ -291,7 +291,7 @@ async function startUpload() {
         await api('POST', '/api/admin/videos', {
             title,
             bunny_video_id: bunny.videoId,
-            price_euros:    parseFloat(price),
+            price_euros:    normalizedPrice,
             paywall_delay_seconds: safeDelay,
             category_id:    catId || null,
             orientation,
