@@ -189,12 +189,12 @@ img { display: block; }
 .creator-name { font-size: 14px; font-weight: 600; }
 .creator-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .desc-block { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px; font-size: 13px; color: var(--muted); line-height: 1.65; }
-.related-block { margin-top: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px; }
+.watch-sidebar { width: 300px; flex-shrink: 0; display: none; }
+@media(min-width:1000px){ .watch-sidebar { display: block; } }
 .related-label { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 .rel-card { display: flex; gap: 10px; margin-bottom: 12px; cursor: pointer; }
 .rel-thumb { width: 120px; aspect-ratio: 16/9; border-radius: 2px; background: var(--surface2); overflow: hidden; flex-shrink: 0; }
 .rel-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.watch-sidebar { display: none; }
 
 /* ── Gallery Detail & Lightbox ────────────────────────────────── */
 .gallery-image-grid {

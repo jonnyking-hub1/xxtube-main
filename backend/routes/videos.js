@@ -278,35 +278,7 @@ router.get('/:id/related', async (req, res) => {
             [current.category_id, current.orientation, tags, req.params.id]
         );
 
-        let videos = result.rows.map(withSignedThumbnail);
-
-        if (videos.length < 6) {
-            const fallback = await db.query(
-                `SELECT
-                    v.id, v.title, v.thumbnail_url, v.bunny_video_id, v.duration_seconds,
-                    v.price_euros, v.views_count, v.is_vr, v.is_amateur,
-                    (
-                        CASE WHEN v.category_id = $1 THEN 3 ELSE 0 END +
-                        CASE WHEN v.orientation = $2 THEN 2 ELSE 0 END +
-                        CASE WHEN EXISTS (
-                            SELECT 1 FROM video_tags vt4
-                            WHERE vt4.video_id = v.id AND vt4.tag_name = ANY($3::text[])
-                        ) THEN 3 ELSE 0 END
-                    ) AS score
-                 FROM videos v
-                 WHERE v.id != $4 AND v.is_published = TRUE
-                 ORDER BY score DESC, v.views_count DESC
-                 LIMIT 6`,
-                [current.category_id, current.orientation, tags, req.params.id]
-            );
-
-            const merged = [...videos, ...fallback.rows.map(withSignedThumbnail)];
-            const dedup = new Map();
-            for (const item of merged) dedup.set(item.id, item);
-            videos = Array.from(dedup.values()).slice(0, 6);
-        }
-
-        res.json({ videos });
+        res.json({ videos: result.rows.map(withSignedThumbnail) });
     } catch (err) {
         console.error('Related error:', err);
         res.status(500).json({ error: 'Failed to fetch related.' });
