@@ -191,7 +191,7 @@ function bindPaywallEvents() {
     });
     document.getElementById('recoverSubmit')?.addEventListener('click', submitRecover);
     document.getElementById('authGoogleBtn')?.addEventListener('click', () => {
-        window.open('/auth.html', '_blank', 'noopener,noreferrer,width=460,height=760');
+        window.open('/google-auth.html', '_blank', 'noopener,noreferrer,width=460,height=760');
     });
 
     window.addEventListener('message', (event) => {

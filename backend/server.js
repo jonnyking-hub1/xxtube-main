@@ -69,11 +69,28 @@ app.use((err, req, res, next) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n🚀 XXTube running on port ${PORT}`);
-    console.log(`   Admin panel: http://localhost:${PORT}/admin.html`);
-    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
-});
+const DEFAULT_PORT = Number(process.env.PORT) || 3000;
+
+function startServer(port) {
+    const server = app.listen(port, '0.0.0.0', () => {
+        console.log(`\n🚀 XXTube running on port ${port}`);
+        console.log(`   Admin panel: http://localhost:${port}/admin.html`);
+        console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
+    });
+
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            const fallbackPort = port + 1;
+            console.warn(`Port ${port} is busy. Retrying on ${fallbackPort}...`);
+            startServer(fallbackPort);
+            return;
+        }
+
+        console.error('Server failed to start:', err);
+        process.exit(1);
+    });
+}
+
+startServer(DEFAULT_PORT);
 
 module.exports = app;

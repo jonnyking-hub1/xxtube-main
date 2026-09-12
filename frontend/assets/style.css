@@ -51,7 +51,7 @@ img { display: block; }
 .age-fine { margin-top: 14px; font-size: 11px; color: var(--subtle); }
 
 /* ── Header ─────────────────────────────────────────────────── */
-.site-header { position: sticky; top: 0; z-index: 100; background: rgba(17,17,17,.96); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); box-shadow: 0 8px 18px rgba(0,0,0,.18); }
+.site-header { position: sticky; top: 0; z-index: 100; background: rgba(17,17,17,.96); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); box-shadow: 0 8px 18px rgba(0,0,0,.18); }
 .header-row { max-width: 1400px; margin: 0 auto; padding: 0 20px; height: 56px; display: flex; align-items: center; gap: 14px; }
 .menu-btn { background: none; border: none; color: var(--muted); display: flex; flex-direction: column; gap: 4.5px; padding: 6px; transition: color .15s; }
 .menu-btn:hover { color: var(--text); }
