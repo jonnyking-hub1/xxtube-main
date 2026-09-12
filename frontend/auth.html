@@ -18,15 +18,26 @@
   h1 { font-size:26px; font-weight:700; text-align:center; margin-bottom:26px; letter-spacing:.2px; }
   .infobox { background:var(--input); border:1px solid var(--input-border); border-radius:8px; padding:16px 18px; font-size:15px; font-weight:600; margin-bottom:14px; display:flex; align-items:center; gap:12px; }
   .infobox .dot { width:10px; height:10px; border-radius:50%; background:var(--red); flex-shrink:0; }
-  .cta { display:flex; align-items:center; justify-content:center; gap:12px; width:100%; height:56px; margin-top:6px; background:var(--red); border:none; border-radius:8px; color:#fff; font-size:16px; font-weight:700; cursor:pointer; transition:.15s; }
-  .cta:hover { background:var(--red-hover); }
-  .cta svg { width:20px; height:20px; }
-  .prov { display:flex; align-items:center; gap:14px; width:100%; height:56px; padding:0 18px; margin-bottom:14px; background:var(--input); border:1px solid var(--input-border); border-radius:8px; color:var(--text); font-size:15px; font-weight:600; text-decoration:none; cursor:pointer; transition:.15s; }
-  .prov:hover { background:#1a1a1a; border-color:#4a4a4a; }
+  .prov-list { display:flex; flex-direction:column; gap:12px; margin-top:6px; }
+  .prov {
+    display:flex; align-items:center; gap:14px; width:100%; height:56px; padding:0 18px;
+    border-radius:8px; font-size:15px; font-weight:600; text-decoration:none;
+    cursor:pointer; transition:.15s; border:1px solid transparent;
+  }
   .prov svg { width:20px; height:20px; flex-shrink:0; }
-  .prov.soon { opacity:.4; cursor:not-allowed; }
-  .prov.auth-soon { margin-top:14px; }
-  .prov .badge { margin-left:auto; font-size:11px; font-weight:500; color:var(--muted); border:1px solid var(--input-border); border-radius:12px; padding:3px 10px; }
+  .prov .badge { margin-left:auto; font-size:11px; font-weight:500; border-radius:12px; padding:3px 10px; }
+
+  /* Authentic per-provider brand styling, matching real provider button conventions */
+  .prov-google  { background:#fff; color:#3c4043; border-color:#dadce0; }
+  .prov-google:hover { background:#f8f9fa; box-shadow:0 1px 2px rgba(0,0,0,.15); }
+  .prov-apple   { background:#000; color:#fff; }
+  .prov-apple:hover { background:#1a1a1a; }
+  .prov-facebook{ background:#1877F2; color:#fff; }
+  .prov-facebook:hover { background:#1568d8; }
+
+  .prov.soon { opacity:.45; cursor:not-allowed; pointer-events:none; }
+  .prov.soon .badge { background:rgba(255,255,255,.15); color:#fff; }
+  .prov-google.soon .badge { background:#f1f3f4; color:#5f6368; border:1px solid #dadce0; }
   .foot { text-align:center; color:var(--muted); font-size:13px; margin-top:22px; line-height:2; }
   .foot a { color:var(--red-link); text-decoration:none; }
   .foot a:hover { text-decoration:underline; }
@@ -40,18 +51,28 @@
 
   <div class="infobox"><span class="dot"></span><span>Sign in to pick up where you left off</span></div>
 
-  <button class="cta" id="btnGoogle" type="button">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffffff" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"/></svg>
-    <span>Continue with Google</span>
-  </button>
+  <div class="prov-list">
+    <button class="prov prov-google" id="btnGoogle" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.43.34-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+      </svg>
+      <span>Continue with Google</span>
+    </button>
 
-  <div class="prov soon auth-soon" aria-disabled="true">
-    <svg viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M17.05 12.54c-.03-2.89 2.36-4.27 2.47-4.34-1.35-1.97-3.44-2.24-4.18-2.27-1.78-.18-3.47 1.05-4.37 1.05-.9 0-2.29-1.02-3.77-1-1.94.03-3.73 1.13-4.73 2.86-2.02 3.5-.52 8.68 1.45 11.52.96 1.39 2.1 2.95 3.6 2.89 1.45-.06 2-.93 3.75-.93s2.24.93 3.77.9c1.56-.03 2.55-1.41 3.5-2.8 1.1-1.61 1.55-3.17 1.58-3.25-.04-.02-3.03-1.16-3.07-4.63zM14.16 4.06c.8-.97 1.34-2.32 1.19-3.66-1.15.05-2.55.77-3.38 1.74-.74.86-1.39 2.23-1.22 3.55 1.29.1 2.6-.65 3.41-1.63z"/></svg>
-    Continue with Apple <span class="badge">soon</span>
-  </div>
-  <div class="prov soon" aria-disabled="true">
-    <svg viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.09 24 18.1 24 12.07z"/></svg>
-    Continue with Facebook <span class="badge">soon</span>
+    <div class="prov prov-apple soon" aria-disabled="true">
+      <svg viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M17.05 12.54c-.03-2.89 2.36-4.27 2.47-4.34-1.35-1.97-3.44-2.24-4.18-2.27-1.78-.18-3.47 1.05-4.37 1.05-.9 0-2.29-1.02-3.77-1-1.94.03-3.73 1.13-4.73 2.86-2.02 3.5-.52 8.68 1.45 11.52.96 1.39 2.1 2.95 3.6 2.89 1.45-.06 2-.93 3.75-.93s2.24.93 3.77.9c1.56-.03 2.55-1.41 3.5-2.8 1.1-1.61 1.55-3.17 1.58-3.25-.04-.02-3.03-1.16-3.07-4.63zM14.16 4.06c.8-.97 1.34-2.32 1.19-3.66-1.15.05-2.55.77-3.38 1.74-.74.86-1.39 2.23-1.22 3.55 1.29.1 2.6-.65 3.41-1.63z"/></svg>
+      <span>Continue with Apple</span>
+      <span class="badge">soon</span>
+    </div>
+
+    <div class="prov prov-facebook soon" aria-disabled="true">
+      <svg viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.09 24 18.1 24 12.07z"/></svg>
+      <span>Continue with Facebook</span>
+      <span class="badge">soon</span>
+    </div>
   </div>
 
   <p class="foot">
