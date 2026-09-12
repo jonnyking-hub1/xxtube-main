@@ -28,6 +28,14 @@
       "dest": "/frontend/watch.html"
     },
     {
+      "src": "/auth.html",
+      "dest": "/frontend/auth.html"
+    },
+    {
+      "src": "/google-auth.html",
+      "dest": "/frontend/google-auth.html"
+    },
+    {
       "src": "/galleries.html",
       "dest": "/frontend/galleries.html"
     },
