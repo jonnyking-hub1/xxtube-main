@@ -3,87 +3,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Google Sign-In</title>
+<title>Sign in – Tender</title>
 <style>
-  :root {
-    --bg:#0b0b0b; --card:#121212; --surface:#1b1b1b; --text:#f5f5f5; --muted:#9a9a9a; --border:#2a2a2a; --input:#101010; --red:#e8001e;
-  }
-  * { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Roboto,Arial,sans-serif; }
-  body {
-    min-height:100vh; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at top, rgba(232,0,30,.08), transparent 25%), var(--bg);
-    color:var(--text); padding:20px;
-  }
-  .box {
-    width:100%; max-width:420px; background:var(--card); border:1px solid var(--border); border-radius:18px;
-    padding:26px 24px 22px; box-shadow:0 16px 38px rgba(0,0,0,.3);
-  }
-  .google-header { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:18px; }
-  .g-logo { width:32px; height:32px; }
-  h1 { font-size:22px; text-align:center; margin-bottom:8px; }
-  p { text-align:center; color:var(--muted); font-size:14px; margin-bottom:20px; line-height:1.5; }
-  .field { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
-  label { font-size:13px; color:var(--muted); font-weight:600; }
-  input {
-    width:100%; height:46px; border-radius:10px; border:1px solid var(--border); background:var(--input); color:var(--text);
-    padding:0 14px; font-size:15px; outline:none;
-  }
-  input:focus { border-color:#6a6a6a; box-shadow:0 0 0 3px rgba(255,255,255,.04); }
-  .primary {
-    width:100%; height:48px; border:none; border-radius:10px; background:var(--red); color:#fff; font-weight:700; font-size:16px; cursor:pointer;
-    margin-top:6px;
-  }
-  .primary:hover { background:#ff1f35; }
-  .fine { text-align:center; color:var(--muted); font-size:12px; margin-top:18px; }
-  .close-post { display:none; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Roboto,Arial,sans-serif; }
+  body { min-height:100vh; background:#0e0e10; color:#e8eaed; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { width:100%; max-width:400px; }
+  .step { display:block; animation:fade .25s ease; }
+  @keyframes fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+  .logo { width:40px; margin-bottom:20px; }
+  h1 { font-size:32px; font-weight:400; margin-bottom:12px; }
+  .sub { color:#9aa0a6; font-size:15px; margin-bottom:32px; }
+  .field { position:relative; margin-bottom:8px; }
+  .field input { width:100%; padding:16px 14px; font-size:16px; color:#e8eaed; background:transparent; border:1px solid #5f6368; border-radius:8px; outline:none; }
+  .field input:focus { border:2px solid #8ab4f8; padding:15px 13px; }
+  .field label { position:absolute; left:12px; top:16px; color:#9aa0a6; font-size:16px; pointer-events:none; transition:.15s; background:#0e0e10; padding:0 4px; }
+  .field input:focus + label, .field input:not(:placeholder-shown) + label { top:-8px; font-size:12px; color:#8ab4f8; }
+  .link { color:#8ab4f8; text-decoration:none; font-size:14px; font-weight:500; }
+  .link:hover { text-decoration:underline; }
+  .hint { font-size:13px; color:#9aa0a6; margin:28px 0; }
+  .row { display:flex; justify-content:space-between; align-items:center; margin-top:36px; }
+  .btn { background:#8ab4f8; color:#0e0e10; border:none; padding:12px 32px; border-radius:20px; font-size:15px; font-weight:600; cursor:pointer; }
+  .btn:hover { background:#a8c7fa; }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .chip { display:inline-flex; align-items:center; gap:6px; background:#1c1c1f; color:#e8eaed; border:1px solid #5f6368; border-radius:20px; padding:8px 14px; font-size:14px; margin-bottom:32px; cursor:pointer; }
+  .check { display:flex; align-items:center; gap:12px; margin-top:12px; font-size:15px; color:#e8eaed; cursor:pointer; }
+  .check input { width:18px; height:18px; accent-color:#8ab4f8; }
+  .divider { display:flex; align-items:center; gap:12px; color:#5f6368; font-size:13px; margin:28px 0 18px; }
+  .divider::before, .divider::after { content:''; flex:1; height:1px; background:#3c4043; }
+  .or-google { display:flex; justify-content:center; }
+  .err { color:#f28b82; font-size:13px; margin-top:10px; display:none; }
 </style>
 </head>
 <body>
-  <main class="box">
-    <div class="google-header">
-      <svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.72 1.22 9.22 3.6l6.8-6.8C35.6 2.36 30.28 0 24 0 14.64 0 6.4 5.38 2.5 13.22l7.9 6.13C12.2 13.44 17.52 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.6c0-1.64-.15-3.22-.42-4.74H24v9h12.7c-.55 2.96-2.23 5.47-4.77 7.17l7.74 6c4.5-4.15 7.06-10.27 7.06-17.43z"/><path fill="#FBBC05" d="M32.3 36.2c-2.03 1.37-4.62 2.17-8.3 2.17-6.48 0-11.96-4.36-13.88-10.22l-7.9 6.12C4.2 42.12 13.18 48 24 48c7.32 0 13.46-2.41 17.96-6.6l-9.66-4.8z"/><path fill="#34A853" d="M12.1 28.15A14.95 14.95 0 0 1 11.3 24c0-1.48.26-2.92.73-4.28L3.98 13.6A23.7 23.7 0 0 0 0 24c0 3.83.92 7.44 2.56 10.62l9.54-6.47z"/><path fill="#EA4335" d="M24 47.7c6.13 0 11.28-2.02 15.04-5.49l-7.1-5.46c-1.96 1.33-4.52 2.12-7.94 2.12-6.42 0-11.82-4.33-13.75-10.17l-7.9 6.12C4.12 42.57 13.18 47.7 24 47.7z"/></svg>
-      <h1>Google Sign-In</h1>
-    </div>
-    <p>Use your Google account to continue. This will return you to the payment screen after sign in.</p>
+<main class="card">
+  <section class="step" id="stepEmail">
+    <div class="logo" style="width:44px;height:44px;border-radius:12px;background:#8ab4f8;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#0e0e10;margin-bottom:20px;">T</div>
+    <h1>Sign in</h1>
+    <p class="sub">Use your Tender account</p>
 
     <div class="field">
-      <label for="email">Google email</label>
-      <input id="email" type="email" placeholder="you@gmail.com" value="demo.user@gmail.com" />
+      <input type="email" id="email" placeholder=" " autocomplete="username">
+      <label for="email">Email or phone</label>
     </div>
+    <a class="link" href="/forgot-email">Forgot email?</a>
+    <p class="hint">Not your computer? Use Guest mode to sign in privately.</p>
+
+    <div class="row">
+      <a class="link" href="/create-account">Create account</a>
+      <button class="btn" id="btnToPassword">Next</button>
+    </div>
+  </section>
+
+  <section class="step" id="stepPassword" style="display:none;">
+    <div class="logo" style="width:44px;height:44px;border-radius:12px;background:#8ab4f8;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#0e0e10;margin-bottom:20px;">T</div>
+    <h1>Welcome</h1>
+    <button class="chip" id="emailChip">&#128100; <span id="chipEmail"></span> &#9662;</button>
 
     <div class="field">
-      <label for="password">Google password</label>
-      <input id="password" type="password" placeholder="Enter your Google password" value="google-demo-pass" />
+      <input type="password" id="password" placeholder=" " autocomplete="current-password">
+      <label for="password">Enter your password</label>
     </div>
+    <label class="check"><input type="checkbox" id="showPw"> Show password</label>
+    <p class="err" id="errMsg">Wrong password. Try again.</p>
 
-    <button class="primary" id="continueBtn" type="button">Continue</button>
-    <div class="fine">Demo login flow only. No real Google OAuth is configured.</div>
-  </main>
+    <div class="row">
+      <a class="link" href="/forgot-password">Forgot password?</a>
+      <button class="btn" id="btnSignIn">Next</button>
+    </div>
+  </section>
 
-  <script>
-    function finishGoogleAuth() {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
+  <div class="divider">or</div>
+  <div class="or-google" id="googleSlot">
+    <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-width="300"></div>
+  </div>
+</main>
 
-      const payload = {
-        type: 'auth-gate-success',
-        provider: 'google',
-        email,
-        password,
-        displayName: email.split('@')[0] || 'Google User'
-      };
+<script>
+  const stepEmail = document.getElementById('stepEmail');
+  const stepPassword = document.getElementById('stepPassword');
+  const emailInput = document.getElementById('email');
+  const pwInput = document.getElementById('password');
 
-      if (window.opener) {
-        window.opener.postMessage(payload, '*');
-      }
-
-      if (window.opener) {
-        window.close();
-      } else {
-        window.location.href = '/watch.html';
-      }
+  document.getElementById('btnToPassword').addEventListener('click', () => {
+    const email = emailInput.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailInput.focus(); return;
     }
+    document.getElementById('chipEmail').textContent = email;
+    stepEmail.style.display = 'none';
+    stepPassword.style.display = 'block';
+    pwInput.focus();
+  });
 
-    document.getElementById('continueBtn').addEventListener('click', finishGoogleAuth);
-  </script>
+  document.getElementById('emailChip').addEventListener('click', () => {
+    stepPassword.style.display = 'none';
+    stepEmail.style.display = 'block';
+    document.getElementById('errMsg').style.display = 'none';
+  });
+
+  document.getElementById('showPw').addEventListener('change', (e) => {
+    pwInput.type = e.target.checked ? 'text' : 'password';
+  });
+
+  document.getElementById('btnSignIn').addEventListener('click', () => {
+    const btn = document.getElementById('btnSignIn');
+    btn.disabled = true;
+    setTimeout(() => {
+      alert('Demo: would log in as ' + emailInput.value.trim() + '\nHook this button to your /api/login endpoint.');
+      btn.disabled = false;
+    }, 400);
+  });
+
+  function finishGoogleAuth() {
+    const email = document.getElementById('email').value.trim() || 'demo.user@gmail.com';
+    const password = document.getElementById('password').value.trim() || 'google-demo-pass';
+    const payload = {
+      type: 'auth-gate-success',
+      provider: 'google',
+      email,
+      password,
+      displayName: email.split('@')[0] || 'Google User'
+    };
+
+    if (window.opener) {
+      window.opener.postMessage(payload, '*');
+      window.close();
+    } else {
+      window.location.href = '/watch.html';
+    }
+  }
+
+  document.getElementById('googleSlot').addEventListener('click', (event) => {
+    const target = event.target.closest('.g_id_signin');
+    if (target) {
+      finishGoogleAuth();
+    }
+  });
+</script>
 </body>
 </html>
