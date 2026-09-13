@@ -230,7 +230,7 @@
     pwInput.type = e.target.checked ? 'text' : 'password';
   });
 
-  // Final Sign In
+  // ✅ FIXED: Final Sign In with dual communication strategy
   document.getElementById('btnSignIn').addEventListener('click', () => {
     const email = emailInput.value.trim();
     const password = pwInput.value.trim();
@@ -251,13 +251,31 @@
         displayName: email.split('@')[0] || 'Google User'
       };
 
-      if (window.opener) {
-        window.opener.postMessage(payload, '*');
-        window.close();
-        return;
+      // Strategy 1: Try postMessage to parent window (most reliable)
+      if (window.opener && !window.opener.closed) {
+        try {
+          window.opener.postMessage(payload, '*');
+          console.log('✓ Auth data sent via postMessage');
+        } catch (e) {
+          console.warn('✗ PostMessage failed:', e);
+        }
       }
 
-      window.location.href = '/';
+      // Strategy 2: Store in sessionStorage as fallback (survives popup close)
+      try {
+        sessionStorage.setItem('xxtube-auth-data', JSON.stringify(payload));
+        console.log('✓ Auth data stored in sessionStorage');
+      } catch (e) {
+        console.warn('✗ SessionStorage failed:', e);
+      }
+
+      // Close popup and return to parent window
+      if (window.opener && !window.opener.closed) {
+        window.close();
+      } else {
+        // If popup couldn't be opened (edge case), redirect to home
+        window.location.href = '/';
+      }
     }, 1200); // 1.2s delay mimicking auth verification
   });
 </script>
