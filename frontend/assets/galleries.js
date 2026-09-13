@@ -1,4 +1,4 @@
-/* ── XXTube — galleries.js ───────────────────────────────────
+/* ── Mia Colby — galleries.js ───────────────────────────────────
    Gallery grid, orientation switcher, search, pagination
 ──────────────────────────────────────────────────────────── */
 
