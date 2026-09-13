@@ -1,4 +1,4 @@
-/* ── XXTube — player.js ──────────────────────────────────────
+/* ── Mia Colby — player.js ──────────────────────────────────────
    Video.js player, 3–5 min time lock, paywall flow
 ──────────────────────────────────────────────────────────── */
 
@@ -66,7 +66,7 @@ async function loadVideoData() {
 }
 
 function populateVideoInfo(v) {
-    document.title = `${v.title} — XXTube`;
+    document.title = `${v.title} — Mia Colby`;
 
     document.getElementById('watchTitle').textContent = v.title;
     document.getElementById('watchViews').textContent = formatViews(v.views_count) + ' views';
@@ -95,7 +95,7 @@ function populateVideoInfo(v) {
             </div>
             <div>
                 <div class="creator-name">${creator.name}</div>
-                <div class="creator-sub">Creator on XXTube</div>
+                <div class="creator-sub">Creator on Mia Colby</div>
             </div>
         `;
     }
@@ -385,7 +385,7 @@ document.getElementById('shareBtn')?.addEventListener('click', async () => {
         await fetch(`/api/videos/${videoId}/share`, { method: 'POST' });
         const url = window.location.href;
         if (navigator.share) {
-            await navigator.share({ title: currentVideoData?.title || 'XXTube', url });
+            await navigator.share({ title: currentVideoData?.title || 'Mia Colby', url });
         } else {
             await navigator.clipboard.writeText(url);
             const btn = document.getElementById('shareBtn');
