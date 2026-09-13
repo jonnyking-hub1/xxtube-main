@@ -1,4 +1,4 @@
-/* ── XXTube — gallery-viewer.js ──────────────────────────────
+/* ── Mia Colby — gallery-viewer.js ──────────────────────────────
    Single gallery detail page + lightbox image viewer
 ──────────────────────────────────────────────────────────── */
 
@@ -22,7 +22,7 @@ async function loadGallery() {
         const data = await res.json();
         const g    = data.gallery;
 
-        document.title = `${g.title} — XXTube`;
+        document.title = `${g.title} — Mia Colby`;
         document.getElementById('galleryTitle').textContent = g.title;
         document.getElementById('galleryMeta').textContent =
             `${g.images.length} photos · ${formatViews(g.views_count)} views · ${g.category_name || ''}`;
