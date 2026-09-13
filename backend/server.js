@@ -73,7 +73,7 @@ const DEFAULT_PORT = Number(process.env.PORT) || 3000;
 
 function startServer(port) {
     const server = app.listen(port, '0.0.0.0', () => {
-        console.log(`\n🚀 XXTube running on port ${port}`);
+        console.log(`\n🚀 Mia Colby running on port ${port}`);
         console.log(`   Admin panel: http://localhost:${port}/admin.html`);
         console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
     });
