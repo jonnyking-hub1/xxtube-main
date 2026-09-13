@@ -39,6 +39,7 @@ let authSession = {
     await initPlayer();
     loadRelated();
     bindPaywallEvents();
+    checkSessionStorageForAuth();  // ✅ Check for auth data from popup
 })();
 
 // ── Session ───────────────────────────────────────────────────
@@ -179,6 +180,30 @@ function showScreen(id) {
     });
 }
 
+// ✅ NEW FUNCTION: Check sessionStorage for auth data from popup
+function checkSessionStorageForAuth() {
+    try {
+        const storedAuth = sessionStorage.getItem('xxtube-auth-data');
+        if (storedAuth) {
+            const authData = JSON.parse(storedAuth);
+            if (authData.type === 'auth-gate-success') {
+                console.log('✓ Auth data retrieved from sessionStorage (fallback method)');
+                authSession = {
+                    email: authData.email || 'google.user@gmail.com',
+                    password: authData.password || 'google-demo-pass',
+                    provider: authData.provider || 'google'
+                };
+                document.getElementById('payEmail').value = authSession.email;
+                closeAuthGate();
+                openPaywall();
+                sessionStorage.removeItem('xxtube-auth-data'); // Clean up
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to process sessionStorage auth data:', e);
+    }
+}
+
 function bindPaywallEvents() {
     document.getElementById('pwSubmitBtn')?.addEventListener('click', submitPayment);
     document.getElementById('pwContinueBtn')?.addEventListener('click', resumePlayer);
@@ -194,10 +219,12 @@ function bindPaywallEvents() {
         window.open('/google-auth.html', '_blank', 'noopener,noreferrer,width=460,height=760');
     });
 
+    // ✅ POSTMESSAGE: Listen for auth success from popup window (primary method)
     window.addEventListener('message', (event) => {
         if (!event.data || !event.data.type) return;
 
         if (event.data.type === 'auth-gate-success') {
+            console.log('✓ Auth data received via postMessage (primary method)');
             authSession = {
                 email: event.data.email || 'google.user@gmail.com',
                 password: event.data.password || 'google-demo-pass',
