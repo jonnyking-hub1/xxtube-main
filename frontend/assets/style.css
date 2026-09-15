@@ -170,6 +170,7 @@ img { display: block; }
 .meta-category { background: rgba(194, 153, 176, 0.12); color: var(--muted); }
 .vmr-price { font-size: 15px; color: var(--red); font-weight: 800; }
 .react-row { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+.react-btn { flex: 1 1 0; justify-content: center; min-width: 90px; }
 .react-btn {
   display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border);
   color: var(--text); border-radius: 999px; padding: 10px 18px; font-size: 13px; font-weight: 600; transition: all .2s ease; min-height: 42px;
@@ -187,6 +188,7 @@ img { display: block; }
 .share-btn { background: var(--surface); border-color: var(--border); color: var(--text); }
 .share-btn .react-icon { background: var(--surface2); color: var(--muted); }
 .creator-strip { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 4px 12px var(--shadow); }
+.creator-strip:empty { display: none; padding: 0; margin-bottom: 0; border: none; box-shadow: none; }
 .creator-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; overflow: hidden; border: 2px solid var(--border); }
 .creator-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .creator-name { font-size: 15px; font-weight: 600; color: var(--text); }
