@@ -357,13 +357,69 @@ function handleFileSelect(e) {
     }
 }
 
+// ── Telegram Upload ──────────────────────────────────────────
+let telegramConfig = null;
+
+async function getTelegramConfig() {
+    if (telegramConfig) return telegramConfig;
+    telegramConfig = await api('GET', '/api/admin/telegram-config');
+    return telegramConfig;
+}
+
+/**
+ * Uploads a single file directly to Telegram from the browser (bypasses our
+ * backend entirely, since some files exceed Vercel's request body limit).
+ * Returns the Telegram file_id.
+ */
+async function uploadToTelegram(file, filename) {
+    const cfg = await getTelegramConfig();
+    const form = new FormData();
+    form.append('chat_id', cfg.channelId);
+    form.append('document', file, filename);
+
+    const res = await fetch(`https://api.telegram.org/bot${cfg.botToken}/sendDocument`, {
+        method: 'POST',
+        body: form,
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error('Telegram upload failed: ' + (data.description || res.status));
+    return data.result.document.file_id;
+}
+
+/**
+ * Grabs a single frame from a video file (browser-side, via canvas) to use
+ * as its thumbnail, since Telegram doesn't auto-generate one the way Bunny did.
+ */
+function captureVideoThumbnail(videoFile) {
+    return new Promise((resolve, reject) => {
+        const videoEl = document.createElement('video');
+        videoEl.preload = 'metadata';
+        videoEl.muted = true;
+        videoEl.src = URL.createObjectURL(videoFile);
+
+        videoEl.onloadedmetadata = () => {
+            videoEl.currentTime = Math.min(1, videoEl.duration / 2);
+        };
+        videoEl.onseeked = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width  = videoEl.videoWidth;
+            canvas.height = videoEl.videoHeight;
+            canvas.getContext('2d').drawImage(videoEl, 0, 0);
+            canvas.toBlob(blob => {
+                URL.revokeObjectURL(videoEl.src);
+                blob ? resolve(blob) : reject(new Error('Thumbnail capture failed'));
+            }, 'image/jpeg', 0.85);
+        };
+        videoEl.onerror = () => reject(new Error('Could not read video for thumbnail'));
+    });
+}
+
 async function startUpload() {
     const title       = document.getElementById('upTitle').value.trim();
     const price       = document.getElementById('upPrice').value;
     const catId       = document.getElementById('upCategory').value;
     const orientation = document.getElementById('upOrientation').value;
     const tags        = document.getElementById('upTags').value;
-    const paywallDelay = Number(document.getElementById('upPaywallDelay').value);
     const isAmateur   = document.getElementById('upAmateur').checked;
     const isVr        = document.getElementById('upVr').checked;
     const msgEl       = document.getElementById('uploadMsg');
@@ -378,22 +434,36 @@ async function startUpload() {
     if (!selectedFile) { msgEl.style.color='var(--red)'; msgEl.textContent='Select a video file first.'; return; }
 
     try {
-        msgEl.style.color = 'var(--muted)';
-        msgEl.textContent = 'Requesting upload slot from Bunny CDN…';
-
-        const bunny = await api('POST', '/api/admin/videos/upload-url', { title });
-
         document.getElementById('uploadBarWrap').style.display = 'block';
-        await uploadToBunny(selectedFile, bunny, title);
+        const bar = document.getElementById('uploadBarFill');
+        const pct = document.getElementById('uploadPct');
+        const setProgress = (p, label) => {
+            bar.style.width = p + '%'; pct.textContent = p + '%';
+            document.getElementById('uploadStatus').textContent = label;
+        };
 
+        setProgress(10, 'Capturing thumbnail…');
+        let thumbBlob = null;
+        try { thumbBlob = await captureVideoThumbnail(selectedFile); }
+        catch (e) { console.warn('Thumbnail capture skipped:', e); }
+
+        setProgress(30, 'Uploading video…');
+        const telegramFileId = await uploadToTelegram(selectedFile, title + '.mp4');
+
+        let telegramThumbId = null;
+        if (thumbBlob) {
+            setProgress(75, 'Uploading thumbnail…');
+            telegramThumbId = await uploadToTelegram(thumbBlob, title + '-thumb.jpg');
+        }
+
+        setProgress(90, 'Saving video…');
         const tagList = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-        const safeDelay = Number.isFinite(paywallDelay) ? Math.max(0, Math.round(paywallDelay)) : 60;
 
         await api('POST', '/api/admin/videos', {
             title,
-            bunny_video_id: bunny.videoId,
+            telegram_file_id:  telegramFileId,
+            telegram_thumb_id: telegramThumbId,
             price_euros:    normalizedPrice,
-            paywall_delay_seconds: safeDelay,
             category_id:    catId || null,
             orientation,
             performer_ids:  performerIds,
@@ -402,43 +472,13 @@ async function startUpload() {
             is_vr:          isVr,
         });
 
+        setProgress(100, 'Done!');
         msgEl.style.color = 'var(--green)';
         msgEl.textContent = '✅ Video published successfully!';
     } catch (e) {
         msgEl.style.color = 'var(--red)';
         msgEl.textContent = 'Upload failed: ' + (e.message || 'Unknown error');
     }
-}
-
-async function uploadToBunny(file, bunny, title) {
-    return new Promise((resolve, reject) => {
-        const upload = new tus.Upload(file, {
-            endpoint: bunny.uploadUrl,
-            retryDelays: [0, 3000, 5000, 10000, 20000],
-            headers: {
-                AuthorizationSignature: bunny.signature,
-                AuthorizationExpire:    bunny.expirationTime,
-                VideoId:                bunny.videoId,
-                LibraryId:              bunny.libraryId,
-            },
-            metadata: {
-                filetype: file.type,
-                title:    title,
-            },
-            onError: (error) => {
-                reject(new Error('Upload failed: ' + error.message));
-            },
-            onProgress: (bytesUploaded, bytesTotal) => {
-                const pct = Math.round((bytesUploaded / bytesTotal) * 100);
-                document.getElementById('uploadBarFill').style.width = pct + '%';
-                document.getElementById('uploadPct').textContent = pct + '%';
-                document.getElementById('uploadStatus').textContent =
-                    pct < 100 ? 'Uploading to Bunny CDN…' : 'Processing…';
-            },
-            onSuccess: () => resolve(),
-        });
-        upload.start();
-    });
 }
 
 // ── Videos Table ─────────────────────────────────────────────
@@ -729,21 +769,6 @@ async function loadGalleryPerformerChecklist() {
     } catch (e) { console.warn('Gallery performer checklist failed:', e); }
 }
 
-async function uploadGalleryImage(file, onProgress) {
-    const res = await fetch('/api/admin/galleries/upload-image', {
-        method:  'POST',
-        headers: {
-            'X-Admin-Secret': ADMIN_SECRET,
-            'Content-Type':   file.type || 'application/octet-stream',
-            'X-File-Name':    encodeURIComponent(file.name),
-        },
-        body: file,
-    });
-    if (!res.ok) throw new Error('Image upload failed: ' + res.status);
-    const data = await res.json();
-    return data.url;
-}
-
 async function startGalleryUpload() {
     const title       = document.getElementById('gTitle').value.trim();
     const catId       = document.getElementById('gCategory').value;
@@ -760,13 +785,14 @@ async function startGalleryUpload() {
 
     try {
         document.getElementById('gUploadBarWrap').style.display = 'block';
-        const imageUrls = [];
+        const telegramFileIds = [];
 
         for (let i = 0; i < selectedGalleryFiles.length; i++) {
             document.getElementById('gUploadStatus').textContent =
                 `Uploading image ${i + 1} of ${selectedGalleryFiles.length}…`;
-            const url = await uploadGalleryImage(selectedGalleryFiles[i]);
-            imageUrls.push(url);
+            const file = selectedGalleryFiles[i];
+            const fileId = await uploadToTelegram(file, file.name || `image-${i}.jpg`);
+            telegramFileIds.push(fileId);
             const pct = Math.round(((i + 1) / selectedGalleryFiles.length) * 100);
             document.getElementById('gUploadBarFill').style.width = pct + '%';
             document.getElementById('gUploadPct').textContent = pct + '%';
@@ -775,11 +801,11 @@ async function startGalleryUpload() {
         const tagList = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
         await api('POST', '/api/admin/galleries', {
             title,
-            category_id:   catId || null,
+            category_id:       catId || null,
             orientation,
-            performer_ids: performerIds,
-            tags:          tagList,
-            image_urls:    imageUrls,
+            performer_ids:     performerIds,
+            tags:              tagList,
+            telegram_file_ids: telegramFileIds,
         });
 
         msgEl.style.color = 'var(--green)';
