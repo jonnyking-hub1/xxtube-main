@@ -120,10 +120,6 @@ async function initPlayer() {
         preload:   'auto',
         fluid:     true,
         playbackRates: [0.5, 1, 1.25, 1.5, 2],
-        html5: {
-            hls: { overrideNative: true },
-            nativeVideoTracks: false,
-        },
     });
 
     try {
@@ -131,7 +127,7 @@ async function initPlayer() {
         const data = await res.json();
 
         if (data.stream_url) {
-            player.src({ type: 'application/x-mpegURL', src: data.stream_url });
+            player.src({ type: 'video/mp4', src: data.stream_url });
         }
     } catch (e) {
         console.error('Stream URL fetch failed:', e);
