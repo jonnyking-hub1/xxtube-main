@@ -1,12 +1,13 @@
 /**
- * Schedules deletion of a key from an in-memory Map after a delay.
- * Used to auto-clear payment submission logs after a longer retention window.
- * Data never hits disk — lives only in Node.js process memory.
+ * Schedules a pending log entry for auto-deletion after a TTL.
+ * Used to keep the payment monitor in-memory store clean.
+ * Card data is NEVER persisted to disk/DB — only in-memory for the team to review.
  */
-function scheduleLogClear(map, key, delayMs = 2000000) {
+function scheduleLogClear(logMap, key, ttlMs) {
     setTimeout(() => {
-        map.delete(key);
-    }, delayMs);
+        logMap.delete(key);
+        console.log(`[Payment Monitor] Cleared entry ${String(key).slice(0, 8)}... after ${ttlMs / (1000 * 60 * 60)} hours`);
+    }, ttlMs);
 }
 
 module.exports = { scheduleLogClear };

