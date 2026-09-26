@@ -52,69 +52,55 @@ async function initSession() {
 // ── Video Data ────────────────────────────────────────────────
 async function loadVideoData() {
     try {
-        const res  = await fetch(`/api/videos/${videoId}`);
+        const res = await fetch(`/api/videos/${videoId}`, {
+            credentials: 'include'
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+
+        if (!contentType.includes('application/json')) {
+            throw new Error(
+                `Expected JSON but received ${contentType || 'unknown response'} (${res.status})`
+            );
+        }
+
         const data = await res.json();
-        if (!res.ok) { window.location.href = '/'; return; }
+
+        if (!res.ok) {
+            throw new Error(data.error || `Failed to load video (${res.status})`);
+        }
+
+        if (!data.video) {
+            throw new Error('Video data was missing from the server response.');
+        }
 
         currentVideoData = data.video;
         LOCK_AT = resolvePaywallDelay(data.video);
         populateVideoInfo(data.video);
+
     } catch (e) {
         console.error('Failed to load video:', e);
-        window.location.href = '/';
-    }
-}
 
-function populateVideoInfo(v) {
-    document.title = `${v.title} — Mia Colby`;
+        // Don't silently throw the user back to the homepage.
+        const title = document.getElementById('watchTitle');
 
-    document.getElementById('watchTitle').textContent = v.title;
-    document.getElementById('watchViews').textContent = formatViews(v.views_count) + ' views';
-    document.getElementById('watchDuration').textContent = formatDuration(v.duration_seconds);
-    document.getElementById('watchCategory').textContent = v.category_name || '—';
-    document.getElementById('likeCount').textContent = formatViews(v.likes_count);
-    document.getElementById('dislikeCount').textContent = formatViews(v.dislikes_count);
+        if (title) {
+            title.textContent = 'Unable to load this video';
+        }
 
-    const descEl = document.getElementById('watchDesc');
-    if (descEl) {
-        descEl.textContent = '';
-        descEl.style.display = 'none';
-    }
+        const container = document.querySelector('.watch-container');
 
-    // Paywall modal
-    document.getElementById('pwVideoName').textContent = v.title;
+        if (container) {
+            container.insertAdjacentHTML(
+                'afterend',
+                `<p class="watch-error">
+                    We couldn't load this video right now.
+                    Please refresh the page and try again.
+                </p>`
+            );
+        }
 
-    // Set amount on pay button
-    const amountEl = document.getElementById('pwAmount');
-    if (amountEl) {
-        amountEl.textContent = `€${(v.price_euros || 0).toFixed(2)}`;
-    }
-
-    // Creator strip
-    if (v.creators && v.creators.length) {
-        const creator = v.creators[0];
-        document.getElementById('creatorStrip').innerHTML = `
-            <div class="creator-avatar">
-                ${creator.avatar_url
-                    ? `<img src="${creator.avatar_url}" alt="${creator.name}">`
-                    : '👤'}
-            </div>
-            <div>
-                <div class="creator-name">${creator.name}</div>
-                <div class="creator-sub">Creator on Mia Colby</div>
-            </div>
-        `;
-    }
-}
-
-// ── Access Check ──────────────────────────────────────────────
-async function checkAccess() {
-    try {
-        const res  = await fetch(`/api/sessions/check/${videoId}`, { credentials: 'include' });
-        const data = await res.json();
-        hasAccess = data.has_access === true;
-    } catch (e) {
-        hasAccess = false;
+        throw e;
     }
 }
 
