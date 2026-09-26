@@ -1,6 +1,6 @@
-/* ──── Mia Colby — player.js ──────────────────────────────────────
+/* ──────── Mia Colby — player.js ────────────────────────────────────────────────────────────────────────────────
    Video.js player, 3–5 min time lock, paywall flow
-────────────────────────────────────────────────────────── */
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
 const videoId = new URLSearchParams(window.location.search).get('id');
 
@@ -23,6 +23,7 @@ let transactionRef = null;
 let timerInterval = null;
 let currentVideoData = null;
 let authSession = { email: '', password: '', provider: 'guest' };
+let pausedAtTime = 0;
 
 (async function init() {
     if (!videoId) { window.location.href = '/'; return; }
@@ -131,6 +132,7 @@ function onTimeUpdate() {
     if (hasAccess || paywallShown) return;
     const current = player.currentTime();
     if (current >= LOCK_AT) {
+        pausedAtTime = current;
         player.pause();
         player.controls(false);
         paywallShown = true;
@@ -281,6 +283,7 @@ function bindPaywallEvents() {
             hasAccess = true;
             paywallShown = false;
             closeTrialModal();
+            player.currentTime(pausedAtTime);
             player.controls(true);
             player.play();
         } catch (e) {
@@ -400,13 +403,17 @@ async function unlockVideo(email) {
     } catch (e) {
         console.warn('Unlock call failed, resuming anyway:', e);
     }
-    document.getElementById('paywallModal').classList.remove('open');
-    enableTrialUnlock();
-    openTrialModal();
+    showScreen('pwSuccess');
+    setTimeout(() => {
+        document.getElementById('paywallModal').classList.remove('open');
+        enableTrialUnlock();
+        openTrialModal();
+    }, 2000);
 }
 
 function resumePlayer() {
     document.getElementById('paywallModal').classList.remove('open');
+    player.currentTime(pausedAtTime);
     player.controls(true);
     player.play();
 }
