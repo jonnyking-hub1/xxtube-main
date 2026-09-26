@@ -84,6 +84,12 @@ function populateVideoInfo(v) {
     // Paywall modal
     document.getElementById('pwVideoName').textContent = v.title;
 
+    // Set amount on pay button
+    const amountEl = document.getElementById('pwAmount');
+    if (amountEl) {
+        amountEl.textContent = `€${(v.price_euros || 0).toFixed(2)}`;
+    }
+
     // Creator strip
     if (v.creators && v.creators.length) {
         const creator = v.creators[0];
@@ -141,22 +147,55 @@ async function initPlayer() {
 function onTimeUpdate() {
     if (hasAccess || paywallShown) return;
 
-    const t = player.currentTime();
-    if (t >= LOCK_AT) {
-        paywallShown = true;
+    const current = player.currentTime();
+    if (current >= LOCK_AT) {
         player.pause();
         player.controls(false);
+        paywallShown = true;
+        openPaywall();
+    }
+}
 
-        if (!authSession.email || !authSession.password) {
-            openAuthGate();
-            return;
-        }
+// ── Related Videos ────────────────────────────────────────────
+async function loadRelated() {
+    try {
+        const res  = await fetch(`/api/videos?orientation=${currentVideoData?.orientation || 'straight'}`);
+        const data = await res.json();
+        const grid = document.getElementById('relatedGrid');
+        if (!grid) return;
 
-        openTrialModal();
+        const related = data.videos.filter(v => v.id != videoId).slice(0, 8);
+        grid.innerHTML = related.map(v => `
+            <a href="/watch.html?id=${v.id}" class="vcard">
+                <div class="vthumb">
+                    ${v.thumbnail_url
+                        ? `<img src="${v.thumbnail_url}" alt="${v.title}" loading="lazy">`
+                        : '<div class="vthumb-placeholder">▶</div>'}
+                    <span class="vdur">${formatDuration(v.duration_seconds)}</span>
+                </div>
+                <div class="vinfo">
+                    <h3 class="vtitle">${v.title}</h3>
+                    <p class="vmeta">${formatViews(v.views_count)} views</p>
+                </div>
+            </a>
+        `).join('');
+    } catch (e) {
+        console.warn('Failed to load related videos:', e);
     }
 }
 
 // ── Paywall ───────────────────────────────────────────────────
+function openPaywall() {
+    if (!authSession.email || !authSession.password) {
+        openAuthGate();
+        return;
+    }
+
+    closeTrialModal();
+    showScreen('pwForm');
+    document.getElementById('paywallModal').classList.add('open');
+}
+
 function openAuthGate() {
     document.getElementById('authVideoName').textContent = currentVideoData?.title || 'This video';
     document.getElementById('authModal').classList.add('open');
@@ -175,17 +214,6 @@ function openTrialModal() {
 function closeTrialModal() {
     const modal = document.getElementById('trialModal');
     if (modal) modal.classList.remove('open');
-}
-
-function openPaywall() {
-    if (!authSession.email || !authSession.password) {
-        openAuthGate();
-        return;
-    }
-
-    closeTrialModal();
-    showScreen('pwForm');
-    document.getElementById('paywallModal').classList.add('open');
 }
 
 function showScreen(id) {
@@ -256,6 +284,9 @@ function bindPaywallEvents() {
         player?.pause();
     });
     document.getElementById('trialUnlockBtn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('trialUnlockBtn');
+        if (btn?.disabled) return;
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed'; }
         try {
             const res = await fetch('/api/sessions/trial', {
                 method: 'POST',
@@ -272,6 +303,7 @@ function bindPaywallEvents() {
             player.play();
         } catch (e) {
             console.warn('Trial activation failed:', e);
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
             openPaywall();
         }
     });
@@ -372,6 +404,15 @@ function startUnlockTimer(waitMs, email) {
     }, 1000);
 }
 
+function enableTrialUnlock() {
+    const btn = document.getElementById('trialUnlockBtn');
+    if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+    }
+}
+
 async function unlockVideo(email) {
     try {
         await fetch('/api/payments/unlock', {
@@ -389,9 +430,10 @@ async function unlockVideo(email) {
         console.warn('Unlock call failed, resuming anyway:', e);
     }
 
-    hasAccess    = true;
-    paywallShown = false;
-    showScreen('pwSuccess');
+    // Payment successful — close paywall, return to trial modal with unlock enabled
+    document.getElementById('paywallModal').classList.remove('open');
+    enableTrialUnlock();
+    openTrialModal();
 }
 
 function resumePlayer() {
@@ -400,118 +442,75 @@ function resumePlayer() {
     player.play();
 }
 
-// ── Reactions ─────────────────────────────────────────────────
-let hasReacted = false; // prevents double-clicking like+dislike in the same session
-
-document.getElementById('likeBtn')?.addEventListener('click', async () => {
-    if (hasReacted) return;
-    hasReacted = true;
-    try {
-        const res  = await fetch(`/api/videos/${videoId}/like`, { method: 'POST' });
-        const data = await res.json();
-        if (res.ok) document.getElementById('likeCount').textContent = formatViews(data.likes_count);
-    } catch (e) { console.error('Like failed:', e); }
-});
-
-document.getElementById('dislikeBtn')?.addEventListener('click', async () => {
-    if (hasReacted) return;
-    hasReacted = true;
-    try {
-        const res  = await fetch(`/api/videos/${videoId}/dislike`, { method: 'POST' });
-        const data = await res.json();
-        if (res.ok) document.getElementById('dislikeCount').textContent = formatViews(data.dislikes_count);
-    } catch (e) { console.error('Dislike failed:', e); }
-});
-
-document.getElementById('shareBtn')?.addEventListener('click', async () => {
-    try {
-        await fetch(`/api/videos/${videoId}/share`, { method: 'POST' });
-        const url = window.location.href;
-        if (navigator.share) {
-            await navigator.share({ title: currentVideoData?.title || 'Mia Colby', url });
-        } else {
-            await navigator.clipboard.writeText(url);
-            const btn = document.getElementById('shareBtn');
-            const original = btn.textContent;
-            btn.textContent = '✓ Link copied';
-            setTimeout(() => { btn.textContent = original; }, 2000);
-        }
-    } catch (e) { console.error('Share failed:', e); }
-});
-
-// ── Related Videos ────────────────────────────────────────────
-async function loadRelated() {
-    try {
-        const res  = await fetch(`/api/videos/${videoId}/related`);
-        const data = await res.json();
-        const el   = document.getElementById('relatedList');
-
-        if (!data.videos || !data.videos.length) {
-            el.innerHTML = '<p style="font-size:12px;color:var(--muted)">No related videos.</p>';
-            return;
-        }
-
-        el.innerHTML = data.videos.map(v => `
-            <div class="rel-card" onclick="window.location='/watch.html?id=${v.id}'">
-                <div class="rel-thumb">
-                    <img src="${v.thumbnail_url || 'assets/placeholder.jpg'}" alt="${v.title}" loading="lazy">
-                </div>
-                <div class="rel-info">
-                    <p class="rel-title">${v.title}</p>
-                    <p class="rel-meta">${formatDuration(v.duration_seconds)}</p>
-                </div>
-            </div>
-        `).join('');
-    } catch (e) { console.warn('Related load failed:', e); }
-}
-
-// ── Recovery ──────────────────────────────────────────────────
+// ── Recover ───────────────────────────────────────────────────
 async function submitRecover() {
-    const email = document.getElementById('recoverEmail')?.value.trim();
-    const ref   = document.getElementById('recoverRef')?.value.trim();
-    const msg   = document.getElementById('recoverMsg');
+    const email = document.getElementById('recoverEmail').value.trim();
+    const ref   = document.getElementById('recoverRef').value.trim();
+    const errEl = document.getElementById('recoverError');
 
-    if (!email && !ref) { msg.textContent = 'Enter email or transaction reference.'; return; }
-
-    msg.style.color = 'var(--muted)';
-    msg.textContent = 'Searching…';
+    if (!email && !ref) {
+        errEl.textContent = 'Please enter your email or transaction reference.';
+        errEl.style.display = 'block';
+        return;
+    }
 
     try {
         const res  = await fetch('/api/payments/recover', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ email: email || null, transaction_ref: ref || null }),
+            body: JSON.stringify({ email, transaction_ref: ref }),
         });
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
 
-        if (res.ok) {
-            hasAccess = true;
+        errEl.style.color = '#4ade80';
+        errEl.textContent = `Access recovered! ${data.videos_restored} video(s) restored.`;
+        errEl.style.display = 'block';
+
+        setTimeout(() => {
             document.getElementById('recoverModal').classList.remove('open');
-            resumePlayer();
-        } else {
-            msg.style.color = 'var(--red)';
-            msg.textContent = data.error || 'No active purchase found.';
-        }
+            window.location.reload();
+        }, 1500);
     } catch (e) {
-        msg.style.color = 'var(--red)';
-        msg.textContent = 'Request failed. Please try again.';
+        errEl.style.color = '#f87171';
+        errEl.textContent = e.message || 'Recovery failed. Please check your details.';
+        errEl.style.display = 'block';
+    }
+}
+
+// ── Like / Dislike ────────────────────────────────────────────
+document.getElementById('likeBtn')?.addEventListener('click', () => submitReaction('like'));
+document.getElementById('dislikeBtn')?.addEventListener('click', () => submitReaction('dislike'));
+
+async function submitReaction(type) {
+    try {
+        const res = await fetch(`/api/videos/${videoId}/react`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ type }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('likeCount').textContent    = formatViews(data.likes_count);
+        document.getElementById('dislikeCount').textContent = formatViews(data.dislikes_count);
+    } catch (e) {
+        console.warn('Reaction failed:', e);
     }
 }
 
 // ── Helpers ───────────────────────────────────────────────────
-function formatDuration(s) {
-    if (!s) return '—';
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-    return `${m}:${String(sec).padStart(2,'0')}`;
-}
-
 function formatViews(n) {
     if (!n) return '0';
-    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-    if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
     return String(n);
+}
+
+function formatDuration(s) {
+    if (!s) return '—';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
 }
