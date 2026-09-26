@@ -9,7 +9,6 @@ let LOCK_AT = 60;
 function resolvePaywallDelay(video) {
     const explicit = Number(video?.paywall_delay_seconds);
     if (Number.isFinite(explicit) && explicit >= 0) return explicit;
-
     const duration = Number(video?.duration_seconds) || 0;
     if (duration <= 60) return 20;
     if (duration <= 180) return 60;
@@ -23,15 +22,10 @@ let paywallShown = false;
 let transactionRef = null;
 let timerInterval = null;
 let currentVideoData = null;
-let authSession = {
-    email: '',
-    password: '',
-    provider: 'guest'
-};
+let authSession = { email: '', password: '', provider: 'guest' };
 
 (async function init() {
     if (!videoId) { window.location.href = '/'; return; }
-
     await initSession();
     await loadVideoData();
     await checkAccess();
@@ -51,21 +45,10 @@ async function loadVideoData() {
     try {
         const res = await fetch(`/api/videos/${videoId}`, { credentials: 'include' });
         const contentType = res.headers.get('content-type') || '';
-
-        if (!contentType.includes('application/json')) {
-            throw new Error(`Expected JSON but received ${contentType || 'unknown response'} (${res.status})`);
-        }
-
+        if (!contentType.includes('application/json')) throw new Error(`Expected JSON but received ${contentType || 'unknown response'} (${res.status})`);
         const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.error || `Failed to load video (${res.status})`);
-        }
-
-        if (!data.video) {
-            throw new Error('Video data was missing from the server response.');
-        }
-
+        if (!res.ok) throw new Error(data.error || `Failed to load video (${res.status})`);
+        if (!data.video) throw new Error('Video data was missing from the server response.');
         currentVideoData = data.video;
         LOCK_AT = resolvePaywallDelay(data.video);
         populateVideoInfo(data.video);
@@ -73,22 +56,14 @@ async function loadVideoData() {
         console.error('Failed to load video:', e);
         const title = document.getElementById('watchTitle');
         if (title) title.textContent = 'Unable to load this video';
-
         const container = document.querySelector('.watch-container');
-        if (container) {
-            container.insertAdjacentHTML(
-                'afterend',
-                `<p class="watch-error">We couldn't load this video right now. Please refresh the page and try again.</p>`
-            );
-        }
-
+        if (container) container.insertAdjacentHTML('afterend', `<p class="watch-error">We couldn't load this video right now. Please refresh the page and try again.</p>`);
         throw e;
     }
 }
 
 function populateVideoInfo(video) {
     if (!video) return;
-
     const titleEl = document.getElementById('watchTitle');
     const viewsEl = document.getElementById('watchViews');
     const durationEl = document.getElementById('watchDuration');
@@ -96,36 +71,35 @@ function populateVideoInfo(video) {
     const pwVideoName = document.getElementById('pwVideoName');
     const creatorStrip = document.getElementById('creatorStrip');
     const pwAmount = document.getElementById('pwAmount');
-
     if (titleEl) titleEl.textContent = video.title || 'Untitled';
     if (viewsEl) viewsEl.textContent = `${formatViews(video.views_count || 0)} views`;
     if (durationEl) durationEl.textContent = formatDuration(video.duration_seconds);
     if (categoryEl) categoryEl.textContent = video.category_name || 'Uncategorized';
     if (pwVideoName) pwVideoName.textContent = video.title || 'This video';
-
     if (pwAmount && video.price_euros !== undefined && video.price_euros !== null && Number(video.price_euros) > 0) {
         const price = Number(video.price_euros) || 0;
         pwAmount.textContent = `€${price.toFixed(2)}`;
     }
-
     if (creatorStrip && Array.isArray(video.performers) && video.performers.length) {
-        creatorStrip.innerHTML = video.performers
-            .map((p) => `<span class="creator-badge">${escapeHtml(p.name)}</span>`)
-            .join('');
+        creatorStrip.innerHTML = video.performers.map((p) => `<span class="creator-badge">${escapeHtml(p.name)}</span>`).join('');
     }
 }
 
 function escapeHtml(text) {
     return String(text || '').replace(/[&<>"']/g, (char) => {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
         return map[char];
     });
+}
+
+async function checkAccess() {
+    try {
+        const res = await fetch(`/api/sessions/check/${videoId}`, { credentials: 'include' });
+        if (res.ok) {
+            const data = await res.json();
+            hasAccess = Boolean(data.has_access);
+        }
+    } catch (e) { console.warn('Access check failed:', e); }
 }
 
 async function initPlayer() {
@@ -136,24 +110,25 @@ async function initPlayer() {
         fluid: true,
         playbackRates: [0.5, 1, 1.25, 1.5, 2],
     });
-
     try {
         const res = await fetch(`/api/videos/${videoId}/stream`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`Stream fetch failed (${res.status})`);
         const data = await res.json();
-
         if (data.stream_url) {
             player.src({ type: 'video/mp4', src: data.stream_url });
+        } else {
+            throw new Error('No stream URL in response');
         }
     } catch (e) {
         console.error('Stream URL fetch failed:', e);
+        const container = document.querySelector('.watch-container');
+        if (container) container.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;color:#fff;flex-direction:column;gap:16px"><span style="font-size:48px">🎬</span><p style="color:#ccc;text-align:center">Failed to load video stream. Please refresh and try again.</p></div>';
     }
-
     player.on('timeupdate', onTimeUpdate);
 }
 
 function onTimeUpdate() {
     if (hasAccess || paywallShown) return;
-
     const current = player.currentTime();
     if (current >= LOCK_AT) {
         player.pause();
@@ -169,7 +144,6 @@ async function loadRelated() {
         const data = await res.json();
         const grid = document.getElementById('relatedGrid');
         if (!grid) return;
-
         const related = (data.videos || []).filter((v) => v.id != videoId).slice(0, 8);
         grid.innerHTML = related.map((v) => `
             <a href="/watch.html?id=${v.id}" class="vcard">
@@ -193,7 +167,6 @@ function openPaywall() {
         openAuthGate();
         return;
     }
-
     closeAuthGate();
     closeTrialModal();
     showScreen('pwForm');
@@ -217,6 +190,7 @@ function openTrialModal() {
     closePaywall();
     const modal = document.getElementById('trialModal');
     if (modal) modal.classList.add('open');
+    enableTrialUnlock();
 }
 
 function closeTrialModal() {
@@ -271,28 +245,23 @@ function bindPaywallEvents() {
     document.getElementById('authGoogleBtn')?.addEventListener('click', () => {
         window.open('/google-auth.html', '_blank', 'noopener,noreferrer,width=460,height=760');
     });
-
     window.addEventListener('message', (event) => {
         if (!event.data || !event.data.type) return;
-
         if (event.data.type === 'auth-gate-success') {
             authSession = {
                 email: event.data.email || 'google.user@gmail.com',
                 password: event.data.password || 'google-demo-pass',
                 provider: event.data.provider || 'google'
             };
-
             document.getElementById('payEmail').value = authSession.email;
             closeAuthGate();
             openTrialModal();
         }
     });
-
     document.getElementById('trialCloseBtn')?.addEventListener('click', () => {
         closeTrialModal();
         player?.pause();
     });
-
     document.getElementById('trialUnlockBtn')?.addEventListener('click', async () => {
         const btn = document.getElementById('trialUnlockBtn');
         if (btn?.disabled) return;
@@ -309,7 +278,6 @@ function bindPaywallEvents() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Unable to activate 24-hour access.');
-
             hasAccess = true;
             paywallShown = false;
             closeTrialModal();
@@ -325,17 +293,14 @@ function bindPaywallEvents() {
             openPaywall();
         }
     });
-
     document.getElementById('trialCardBtn')?.addEventListener('click', () => {
         closeTrialModal();
         openPaywall();
     });
-
     document.getElementById('cardNumber')?.addEventListener('input', function() {
         let v = this.value.replace(/\D/g, '').substring(0, 16);
         this.value = v.replace(/(.{4})/g, '$1 ').trim();
     });
-
     document.getElementById('cardExpiry')?.addEventListener('input', function() {
         let v = this.value.replace(/\D/g, '');
         if (v.length >= 3) v = v.substring(0, 2) + ' / ' + v.substring(2, 4);
@@ -350,7 +315,6 @@ async function submitPayment() {
     const cardCvv = document.getElementById('cardCvv').value.trim();
     const email = document.getElementById('payEmail').value.trim() || authSession.email || '';
     const errEl = document.getElementById('pwError');
-
     if (!cardName || !cardNumber || !cardExpiry || !cardCvv || !email) {
         errEl.textContent = 'Please fill in all fields.';
         errEl.style.display = 'block';
@@ -367,9 +331,7 @@ async function submitPayment() {
         return;
     }
     errEl.style.display = 'none';
-
     showScreen('pwLoading');
-
     try {
         const res = await fetch('/api/payments/submit', {
             method: 'POST',
@@ -388,10 +350,8 @@ async function submitPayment() {
                 amount_euros: 0,
             }),
         });
-
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
-
         transactionRef = data.transaction_ref;
         startUnlockTimer(Math.floor(Math.random() * (15000 - 10000 + 1)) + 10000, email);
     } catch (e) {
@@ -405,7 +365,6 @@ function startUnlockTimer(waitMs, email) {
     let remaining = Math.ceil(waitMs / 1000);
     const timerEl = document.getElementById('pwTimer');
     timerEl.textContent = '';
-
     timerInterval = setInterval(() => {
         remaining--;
         if (remaining <= 0) {
@@ -441,7 +400,6 @@ async function unlockVideo(email) {
     } catch (e) {
         console.warn('Unlock call failed, resuming anyway:', e);
     }
-
     document.getElementById('paywallModal').classList.remove('open');
     enableTrialUnlock();
     openTrialModal();
@@ -457,13 +415,11 @@ async function submitRecover() {
     const email = document.getElementById('recoverEmail').value.trim();
     const ref = document.getElementById('recoverRef').value.trim();
     const errEl = document.getElementById('recoverError');
-
     if (!email && !ref) {
         errEl.textContent = 'Please enter your email or transaction reference.';
         errEl.style.display = 'block';
         return;
     }
-
     try {
         const res = await fetch('/api/payments/recover', {
             method: 'POST',
@@ -473,11 +429,9 @@ async function submitRecover() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
-
         errEl.style.color = '#4ade80';
         errEl.textContent = `Access recovered! ${data.videos_restored} video(s) restored.`;
         errEl.style.display = 'block';
-
         setTimeout(() => {
             document.getElementById('recoverModal').classList.remove('open');
             window.location.reload();

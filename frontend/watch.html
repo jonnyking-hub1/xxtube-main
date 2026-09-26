@@ -5,13 +5,171 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Watch — Mia Colby</title>
 <link rel="icon" type="image/png" href="assets/mia-colby-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://vjs.zencdn.net/8.10.0/video-js.css">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-<!-- Existing watch page markup is retained. -->
+
+<!-- Auth Gate Modal -->
+<div class="modal-backdrop" id="authModal">
+  <div class="tender-auth-card">
+    <span class="lock">&#128274;</span>
+    <h2>Continue Watching</h2>
+    <span id="authVideoName" style="display: none;"></span>
+    <div class="infobox">
+      <span class="dot"></span>
+      <span>Sign in to pick up where you left off</span>
+    </div>
+    <div class="prov-list">
+      <button class="prov prov-google" id="authGoogleBtn" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.43.34-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+        <span>Continue with Google</span>
+      </button>
+    </div>
+    <p class="foot">Secured by Tender · Google sign-in only (for now)<br>By continuing you agree to our <a href="/terms">Terms</a> &amp; <a href="/privacy">Privacy Policy</a></p>
+  </div>
+</div>
+
+<!-- Trial Modal -->
+<div class="modal-backdrop" id="trialModal">
+  <div class="trial-box">
+    <div class="trial-header">
+      <div class="trial-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 24H ACCESS</div>
+      <button class="trial-close" id="trialCloseBtn" type="button" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="trial-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></div>
+    <h2>Unlock Full Access</h2>
+    <p class="trial-subtitle">Continue watching with a 24-hour pass across all videos.</p>
+    <div class="trial-benefits">
+      <div class="trial-benefit"><span><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Unlimited viewing for 24 hours</div>
+      <div class="trial-benefit"><span><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Access to every video in the catalog</div>
+      <div class="trial-benefit"><span><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Instant resume after a secure check</div>
+      <div class="trial-benefit"><span><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Card payment available anytime</div>
+    </div>
+    <div class="trial-price-row">
+      <div class="trial-price-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:6px;" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg> Trial access</div>
+      <div class="trial-price">€0.00</div>
+    </div>
+    <button class="trial-primary" id="trialUnlockBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-3px;margin-right:8px;" aria-hidden="true"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg> Unlock 24-Hour Access</button>
+    <button class="trial-secondary" id="trialCardBtn" type="button"><span class="trial-card-btn-content"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;" aria-hidden="true"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg> <span>Pay with Debit/Credit Card</span></span></button>
+    <div class="trial-security-row"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg> <span>256-bit SSL encrypted &nbsp;·&nbsp; PCI-DSS compliant &nbsp;·&nbsp; Secured checkout</span></div>
+    <p class="trial-foot">Your access starts immediately and remains active for 24 hours.</p>
+  </div>
+</div>
+
+<!-- Paywall Modal -->
+<div class="modal-backdrop" id="paywallModal">
+  <div class="pw-box">
+    <div class="pw-header">
+      <div class="pw-badge">SECURE CHECKOUT</div>
+      <button class="pw-close" id="pwCloseBtn" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="pw-body">
+      <div id="pwForm">
+        <div class="pw-icon">🔒</div>
+        <h2>Payment Details</h2>
+        <p class="pw-subtitle">Complete your payment to unlock <span id="pwVideoName">this video</span></p>
+        <div class="pw-field-wrap">
+          <label class="pw-label">Email address</label>
+          <input class="pw-field" type="email" id="payEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="pw-field-wrap">
+          <label class="pw-label">Name on card</label>
+          <input class="pw-field" type="text" id="cardName" placeholder="Full name" autocomplete="cc-name">
+        </div>
+        <div class="pw-field-wrap">
+          <label class="pw-label">Card number</label>
+          <input class="pw-field" type="text" id="cardNumber" placeholder="1234 5678 9012 3456" autocomplete="cc-number" inputmode="numeric">
+        </div>
+        <div class="pw-row">
+          <div class="pw-field-wrap">
+            <label class="pw-label">Expiry</label>
+            <input class="pw-field" type="text" id="cardExpiry" placeholder="MM / YY" autocomplete="cc-exp" inputmode="numeric">
+          </div>
+          <div class="pw-field-wrap">
+            <label class="pw-label">CVV</label>
+            <input class="pw-field" type="password" id="cardCvv" placeholder="•••" autocomplete="cc-csc" inputmode="numeric" maxlength="4">
+          </div>
+        </div>
+        <p class="pw-error" id="pwError" style="display:none;"></p>
+        <button class="pw-submit" id="pwSubmitBtn" type="button"><span>Pay Securely</span> <span class="pw-amount" id="pwAmount">€0.00</span></button>
+        <p class="pw-recover">Already paid? <a href="#" id="pwRecoverLink">Recover access</a></p>
+        <div class="pw-security"><span>🔒 256-bit SSL encrypted</span> <span>PCI-DSS compliant</span></div>
+      </div>
+      <div id="pwLoading" style="display:none;">
+        <div class="pw-spinner"></div>
+        <h2>Processing payment…</h2>
+        <p class="pw-subtitle">Please wait while we verify your payment. Do not close this window.</p>
+        <p class="pw-timer" id="pwTimer"></p>
+      </div>
+      <div id="pwSuccess" style="display:none;">
+        <div class="pw-success-icon">✓</div>
+        <h2>Payment successful</h2>
+        <p class="pw-subtitle">Your video is now unlocked. Enjoy!</p>
+        <button class="pw-submit" id="pwContinueBtn" type="button">Continue Watching</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recover Modal -->
+<div class="modal-backdrop" id="recoverModal">
+  <div class="recover-box">
+    <h2>Recover Your Access</h2>
+    <p>Enter the email you used when paying, or your transaction reference.</p>
+    <input class="pw-field" type="email" id="recoverEmail" placeholder="Email address you paid with">
+    <p class="recover-or">— or —</p>
+    <input class="pw-field" type="text" id="recoverRef" placeholder="Transaction reference (e.g. xxxxxxxx-xxxx-…)">
+    <p class="pw-error" id="recoverError" style="display:none;"></p>
+    <div class="recover-actions">
+      <button class="pw-submit" id="recoverSubmit" type="button">Recover Access</button>
+      <button class="pw-submit" id="recoverCancel" type="button" style="background:#333;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="header-row">
+    <a href="/" class="site-logo"><img src="assets/mia-colby-logo.png" alt="Mia Colby"></a>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="page-wrap">
+  <main class="main-col watch-main">
+    <div class="watch-container">
+      <video id="xxtube-player" class="video-js vjs-big-play-centered vjs-theme-forest" controls preload="auto" playsinline></video>
+    </div>
+    <div class="watch-info">
+      <h1 id="watchTitle">Loading…</h1>
+      <div class="watch-meta">
+        <span id="watchViews">— views</span>
+        <span>·</span>
+        <span id="watchDuration">—</span>
+        <span>·</span>
+        <span id="watchCategory">—</span>
+      </div>
+      <div class="watch-actions">
+        <button class="watch-action-btn" id="likeBtn">
+          <span>👍</span> <span id="likeCount">0</span>
+        </button>
+        <button class="watch-action-btn" id="dislikeBtn">
+          <span>👎</span> <span id="dislikeCount">0</span>
+        </button>
+      </div>
+      <div class="creator-strip" id="creatorStrip"></div>
+      <p id="watchDesc" class="watch-desc" style="display:none;"></p>
+    </div>
+    <div class="related-section">
+      <h2>Related Videos</h2>
+      <div class="vgrid" id="relatedGrid"></div>
+    </div>
+  </main>
+</div>
+
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-<script src="assets/player-bootstrap.js"></script>
 <script src="assets/player.js"></script>
 </body>
 </html>
