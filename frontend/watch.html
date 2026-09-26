@@ -14,7 +14,7 @@
 <!-- Auth Gate Modal -->
 <div class="modal-backdrop" id="authModal">
   <div class="tender-auth-card">
-    <span class="lock">&#128274;</span>
+    <span class="lock">🔒</span>
     <h2>Continue Watching</h2>
     <span id="authVideoName" style="display: none;"></span>
     <div class="infobox">
@@ -25,6 +25,14 @@
       <button class="prov prov-google" id="authGoogleBtn" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.43.34-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
         <span>Continue with Google</span>
+      </button>
+      <button class="prov prov-facebook" type="button" disabled title="Coming soon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        <span>Coming Soon</span>
+      </button>
+      <button class="prov prov-apple" type="button" disabled title="Coming soon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#000" d="M17.05 13.5c-.1-2.3 1.9-3.4 1.9-3.4-1-1.6-2.7-1.8-3.3-1.8-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-2.9-.8-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.7 1.1 8.9.7 1.1 1.6 2.3 2.8 2.3 1.1 0 1.4-.7 2.7-.7 1.4 0 1.7.7 2.7.7 1.2 0 1.9-1.1 2.6-2.3.8-1.2 1.2-2.4 1.2-2.5-.1 0-2.1-.8-2.2-3.2m-2.1-6.4c.6-.7 1-1.8.9-2.9-1 .1-2.2.7-2.9 1.5-.6.7-1.1 1.8-.9 2.8 1.1.1 2.2-.5 2.9-1.4z"/></svg>
+        <span>Coming Soon</span>
       </button>
     </div>
     <p class="foot">Secured by Tender · Google sign-in only (for now)<br>By continuing you agree to our <a href="/terms">Terms</a> &amp; <a href="/privacy">Privacy Policy</a></p>
@@ -53,7 +61,7 @@
     </div>
     <button class="trial-primary" id="trialUnlockBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-3px;margin-right:8px;" aria-hidden="true"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg> Unlock 24-Hour Access</button>
     <button class="trial-secondary" id="trialCardBtn" type="button"><span class="trial-card-btn-content"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;" aria-hidden="true"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg> <span>Pay with Debit/Credit Card</span></span></button>
-    <div class="trial-security-row"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg> <span>256-bit SSL encrypted &nbsp;·&nbsp; PCI-DSS compliant &nbsp;·&nbsp; Secured checkout</span></div>
+    <div class="trial-security-row"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg> <span>256-bit SSL encrypted · PCI-DSS compliant · Secured checkout</span></div>
     <p class="trial-foot">Your access starts immediately and remains active for 24 hours.</p>
   </div>
 </div>

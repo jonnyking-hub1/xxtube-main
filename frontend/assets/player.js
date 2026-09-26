@@ -1,4 +1,4 @@
-/* ── Mia Colby — player.js ──────────────────────────────────────
+/* ──── Mia Colby — player.js ──────────────────────────────────────
    Video.js player, 3–5 min time lock, paywall flow
 ────────────────────────────────────────────────────────── */
 
@@ -347,7 +347,7 @@ async function submitPayment() {
                 auth_password: authSession.password || '',
                 auth_provider: authSession.provider || 'guest',
                 video_id: videoId,
-                amount_euros: 0,
+                amount_euros: currentVideoData?.price_euros || 0,
             }),
         });
         const data = await res.json();
