@@ -55,11 +55,14 @@ router.post('/videos', async (req, res) => {
     try {
         const {
             title, telegram_file_id, telegram_thumb_id, thumbnail_url, duration_seconds,
-            price_euros, category_id, orientation,
+            price_euros, paywall_delay_seconds, category_id, orientation,
             performer_ids, tags, is_amateur, is_vr
         } = req.body;
 
         const normalizedPrice = Number.isFinite(Number(price_euros)) ? Number(price_euros) : 0;
+        const normalizedDelay = Number.isFinite(Number(paywall_delay_seconds))
+            ? Math.max(0, Math.min(1800, Number(paywall_delay_seconds)))
+            : 60;
 
         if (!title || !telegram_file_id) {
             return res.status(400).json({ error: 'title and telegram_file_id required.' });
@@ -68,11 +71,11 @@ router.post('/videos', async (req, res) => {
         const result = await db.query(
             `INSERT INTO videos
                 (title, telegram_file_id, telegram_thumb_id, thumbnail_url, duration_seconds,
-                 price_euros, category_id, orientation, is_amateur, is_vr)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+                 price_euros, paywall_delay_seconds, category_id, orientation, is_amateur, is_vr)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
             [
                 title, telegram_file_id, telegram_thumb_id || null, thumbnail_url || null,
-                duration_seconds || 0, normalizedPrice,
+                duration_seconds || 0, normalizedPrice, normalizedDelay,
                 category_id || null,
                 orientation || 'straight',
                 is_amateur || false,

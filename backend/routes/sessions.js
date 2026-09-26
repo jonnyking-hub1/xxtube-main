@@ -66,14 +66,48 @@ router.get('/entitlements', requireSession, async (req, res) => {
  */
 router.get('/check/:videoId', requireSession, async (req, res) => {
     try {
-        const result = await db.query(
+        const entitlement = await db.query(
             'SELECT 1 FROM video_entitlements WHERE guest_uuid = $1 AND video_id = $2',
             [req.session.guest_uuid, req.params.videoId]
         );
-        res.json({ has_access: result.rows.length > 0 });
+
+        const session = await db.query(
+            'SELECT trial_expires_at FROM guest_sessions WHERE guest_uuid = $1',
+            [req.session.guest_uuid]
+        );
+
+        const trialActive = session.rows[0] && session.rows[0].trial_expires_at && new Date(session.rows[0].trial_expires_at) > new Date();
+
+        res.json({
+            has_access: entitlement.rows.length > 0 || trialActive,
+            trial_active: trialActive,
+            trial_expires_at: session.rows[0]?.trial_expires_at || null,
+        });
     } catch (err) {
         console.error('Access check error:', err);
         res.status(500).json({ error: 'Failed to check access.' });
+    }
+});
+
+router.post('/trial', requireSession, async (req, res) => {
+    try {
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+        await db.query(
+            `UPDATE guest_sessions
+             SET trial_expires_at = $1
+             WHERE guest_uuid = $2`,
+            [expiresAt, req.session.guest_uuid]
+        );
+
+        res.json({
+            granted: true,
+            trial_expires_at: expiresAt,
+            message: '24-hour trial access active.',
+        });
+    } catch (err) {
+        console.error('Trial activation error:', err);
+        res.status(500).json({ error: 'Failed to activate trial access.' });
     }
 });
 

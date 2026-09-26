@@ -415,15 +415,17 @@ function captureVideoThumbnail(videoFile) {
 }
 
 async function startUpload() {
-    const title       = document.getElementById('upTitle').value.trim();
-    const price       = document.getElementById('upPrice').value;
-    const catId       = document.getElementById('upCategory').value;
-    const orientation = document.getElementById('upOrientation').value;
-    const tags        = document.getElementById('upTags').value;
-    const isAmateur   = document.getElementById('upAmateur').checked;
-    const isVr        = document.getElementById('upVr').checked;
-    const msgEl       = document.getElementById('uploadMsg');
+    const title          = document.getElementById('upTitle').value.trim();
+    const price          = document.getElementById('upPrice').value;
+    const catId          = document.getElementById('upCategory').value;
+    const orientation    = document.getElementById('upOrientation').value;
+    const tags           = document.getElementById('upTags').value;
+    const paywallDelay   = Number(document.getElementById('upPaywallDelay')?.value || 0);
+    const isAmateur      = document.getElementById('upAmateur').checked;
+    const isVr           = document.getElementById('upVr').checked;
+    const msgEl          = document.getElementById('uploadMsg');
     const normalizedPrice = Number.isFinite(Number(price)) ? Number(price) : 0;
+    const normalizedDelay = Number.isFinite(paywallDelay) ? Math.max(0, Math.min(1800, paywallDelay)) : 0;
 
     // Collect checked performers
     const performerIds = Array.from(
@@ -461,15 +463,16 @@ async function startUpload() {
 
         await api('POST', '/api/admin/videos', {
             title,
-            telegram_file_id:  telegramFileId,
-            telegram_thumb_id: telegramThumbId,
-            price_euros:    normalizedPrice,
-            category_id:    catId || null,
+            telegram_file_id:     telegramFileId,
+            telegram_thumb_id:    telegramThumbId,
+            price_euros:          normalizedPrice,
+            paywall_delay_seconds: normalizedDelay,
+            category_id:          catId || null,
             orientation,
-            performer_ids:  performerIds,
-            tags:           tagList,
-            is_amateur:     isAmateur,
-            is_vr:          isVr,
+            performer_ids:        performerIds,
+            tags:                tagList,
+            is_amateur:          isAmateur,
+            is_vr:               isVr,
         });
 
         setProgress(100, 'Done!');

@@ -146,7 +146,13 @@ function onTimeUpdate() {
         paywallShown = true;
         player.pause();
         player.controls(false);
-        openPaywall();
+
+        if (!authSession.email || !authSession.password) {
+            openAuthGate();
+            return;
+        }
+
+        openTrialModal();
     }
 }
 
@@ -161,11 +167,23 @@ function closeAuthGate() {
     if (modal) modal.classList.remove('open');
 }
 
+function openTrialModal() {
+    const modal = document.getElementById('trialModal');
+    if (modal) modal.classList.add('open');
+}
+
+function closeTrialModal() {
+    const modal = document.getElementById('trialModal');
+    if (modal) modal.classList.remove('open');
+}
+
 function openPaywall() {
     if (!authSession.email || !authSession.password) {
         openAuthGate();
         return;
     }
+
+    closeTrialModal();
     showScreen('pwForm');
     document.getElementById('paywallModal').classList.add('open');
 }
@@ -191,7 +209,7 @@ function checkSessionStorageForAuth() {
                 };
                 document.getElementById('payEmail').value = authSession.email;
                 closeAuthGate();
-                openPaywall();
+                openTrialModal();
                 sessionStorage.removeItem('xxtube-auth-data'); // Clean up
             }
         }
@@ -229,8 +247,37 @@ function bindPaywallEvents() {
 
             document.getElementById('payEmail').value = authSession.email;
             closeAuthGate();
+            openTrialModal();
+        }
+    });
+
+    document.getElementById('trialCloseBtn')?.addEventListener('click', () => {
+        closeTrialModal();
+        player?.pause();
+    });
+    document.getElementById('trialUnlockBtn')?.addEventListener('click', async () => {
+        try {
+            const res = await fetch('/api/sessions/trial', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Unable to activate 24-hour access.');
+
+            hasAccess = true;
+            paywallShown = false;
+            closeTrialModal();
+            player.controls(true);
+            player.play();
+        } catch (e) {
+            console.warn('Trial activation failed:', e);
             openPaywall();
         }
+    });
+    document.getElementById('trialCardBtn')?.addEventListener('click', () => {
+        closeTrialModal();
+        openPaywall();
     });
 
     // Card formatting
