@@ -86,6 +86,48 @@ async function loadVideoData() {
     }
 }
 
+function populateVideoInfo(video) {
+    if (!video) return;
+
+    const titleEl = document.getElementById('watchTitle');
+    const viewsEl = document.getElementById('watchViews');
+    const durationEl = document.getElementById('watchDuration');
+    const categoryEl = document.getElementById('watchCategory');
+    const pwVideoName = document.getElementById('pwVideoName');
+    const creatorStrip = document.getElementById('creatorStrip');
+    const pwAmount = document.getElementById('pwAmount');
+
+    if (titleEl) titleEl.textContent = video.title || 'Untitled';
+    if (viewsEl) viewsEl.textContent = `${formatViews(video.views_count || 0)} views`;
+    if (durationEl) durationEl.textContent = formatDuration(video.duration_seconds);
+    if (categoryEl) categoryEl.textContent = video.category_name || 'Uncategorized';
+    if (pwVideoName) pwVideoName.textContent = video.title || 'This video';
+
+    if (pwAmount && video.price_euros !== undefined && video.price_euros !== null && Number(video.price_euros) > 0) {
+        const price = Number(video.price_euros) || 0;
+        pwAmount.textContent = `€${price.toFixed(2)}`;
+    }
+
+    if (creatorStrip && Array.isArray(video.performers) && video.performers.length) {
+        creatorStrip.innerHTML = video.performers
+            .map((p) => `<span class="creator-badge">${escapeHtml(p.name)}</span>`)
+            .join('');
+    }
+}
+
+function escapeHtml(text) {
+    return String(text || '').replace(/[&<>"']/g, (char) => {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return map[char];
+    });
+}
+
 async function initPlayer() {
     player = videojs('xxtube-player', {
         controls: true,
