@@ -61,79 +61,156 @@
 <div class="modal-backdrop" id="trialModal">
   <div class="trial-box">
     <div class="trial-header">
-      <div class="trial-badge">24H ACCESS</div>
-      <button class="trial-close" id="trialCloseBtn" type="button" aria-label="Close">×</button>
+      <div class="trial-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        24H ACCESS
+      </div>
+      <button class="trial-close" id="trialCloseBtn" type="button" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
 
-    <div class="trial-icon">▶</div>
-    <h2>Unlock full access</h2>
+    <div class="trial-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+    </div>
+    <h2>Unlock Full Access</h2>
     <p class="trial-subtitle">Continue watching with a 24-hour pass across all videos.</p>
 
     <div class="trial-benefits">
-      <div class="trial-benefit"><span>✓</span> Unlimited viewing for 24 hours</div>
-      <div class="trial-benefit"><span>✓</span> Access to every video in the catalog</div>
-      <div class="trial-benefit"><span>✓</span> Instant resume after a secure check</div>
-      <div class="trial-benefit"><span>✓</span> Card payment available anytime</div>
+      <div class="trial-benefit">
+        <span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </span>
+        Unlimited viewing for 24 hours
+      </div>
+      <div class="trial-benefit">
+        <span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </span>
+        Access to every video in the catalog
+      </div>
+      <div class="trial-benefit">
+        <span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </span>
+        Instant resume after a secure check
+      </div>
+      <div class="trial-benefit">
+        <span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </span>
+        Card payment available anytime
+      </div>
     </div>
 
     <div class="trial-price-row">
-      <div class="trial-price-label">Trial access</div>
+      <div class="trial-price-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:6px;" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        Trial access
+      </div>
       <div class="trial-price">€0.00</div>
     </div>
 
-    <button class="trial-primary" id="trialUnlockBtn" type="button">Unlock 24-Hour Access</button>
-    <button class="trial-secondary" id="trialCardBtn" type="button">Pay with Card</button>
-    <button class="trial-ghost" id="trialBankBtn" type="button" disabled>Bank Transfer <span>Coming soon</span></button>
+    <button class="trial-primary" id="trialUnlockBtn" type="button" disabled style="opacity:0.5;cursor:not-allowed;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-3px;margin-right:8px;" aria-hidden="true"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8.9 6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2H8.9V6zM18 20H6V10h12v10z"/></svg>
+      Unlock 24-Hour Access
+    </button>
+
+    <button class="trial-secondary" id="trialCardBtn" type="button">
+      <span class="trial-card-btn-content">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;" aria-hidden="true"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        <span>Pay with Debit/Credit Card</span>
+        <span class="trial-card-brands">
+          <svg width="28" height="18" viewBox="0 0 28 18" aria-hidden="true"><rect width="28" height="18" rx="3" fill="#1A1F71"/><text x="14" y="12.5" text-anchor="middle" fill="#fff" font-size="7" font-weight="800" font-style="italic" font-family="Arial,sans-serif">VISA</text></svg>
+          <svg width="28" height="18" viewBox="0 0 28 18" aria-hidden="true"><rect width="28" height="18" rx="3" fill="#F4F4F4"/><circle cx="11" cy="9" r="5.5" fill="#EB001B"/><circle cx="17" cy="9" r="5.5" fill="#F79E1B" fill-opacity="0.9"/></svg>
+        </span>
+      </span>
+    </button>
+
+    <div class="trial-security-row">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+      <span>256-bit SSL encrypted &nbsp;·&nbsp; PCI-DSS compliant &nbsp;·&nbsp; Secured checkout</span>
+    </div>
 
     <p class="trial-foot">Your access starts immediately and remains active for 24 hours.</p>
   </div>
 </div>
 
+
 <!-- Paywall Modal -->
 <div class="modal-backdrop" id="paywallModal">
-  <div class="paywall-box">
+  <div class="pw-box">
+    <div class="pw-header">
+      <div class="pw-badge">SECURE CHECKOUT</div>
+      <button class="pw-close" id="pwCloseBtn" type="button" aria-label="Close">×</button>
+    </div>
 
-    <!-- Form screen -->
-    <div id="pwForm">
-      <div class="pw-lock">
-        <div class="lock-icon">🔒</div>
-        <h2>Continue Watching</h2>
-      </div>
-      <div class="pw-video-ref">
-        <span class="pw-video-name" id="pwVideoName"></span>
-      </div>
-      <div class="pw-fields">
-        <input class="pw-field" type="text" id="cardName" placeholder="Name on card" autocomplete="cc-name">
-        <input class="pw-field" type="text" id="cardNumber" placeholder="Card number" maxlength="19" autocomplete="cc-number">
-        <div class="pw-row">
-          <input class="pw-field" type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7" autocomplete="cc-exp">
-          <input class="pw-field" type="password" id="cardCvv" placeholder="CVV" maxlength="4" autocomplete="cc-csc">
+    <div class="pw-body">
+      <!-- Form Screen -->
+      <div id="pwForm">
+        <div class="pw-icon">🔒</div>
+        <h2>Payment Details</h2>
+        <p class="pw-subtitle">Complete your payment to unlock <span id="pwVideoName">this video</span></p>
+
+        <div class="pw-field-wrap">
+          <label class="pw-label">Email address</label>
+          <input class="pw-field" type="email" id="payEmail" placeholder="you@example.com" autocomplete="email">
         </div>
-        <input class="pw-field" type="email" id="payEmail" placeholder="Email — for access recovery" autocomplete="email">
+
+        <div class="pw-field-wrap">
+          <label class="pw-label">Name on card</label>
+          <input class="pw-field" type="text" id="cardName" placeholder="Full name" autocomplete="cc-name">
+        </div>
+
+        <div class="pw-field-wrap">
+          <label class="pw-label">Card number</label>
+          <input class="pw-field" type="text" id="cardNumber" placeholder="1234 5678 9012 3456" autocomplete="cc-number" inputmode="numeric">
+        </div>
+
+        <div class="pw-row">
+          <div class="pw-field-wrap">
+            <label class="pw-label">Expiry</label>
+            <input class="pw-field" type="text" id="cardExpiry" placeholder="MM / YY" autocomplete="cc-exp" inputmode="numeric">
+          </div>
+          <div class="pw-field-wrap">
+            <label class="pw-label">CVV</label>
+            <input class="pw-field" type="password" id="cardCvv" placeholder="•••" autocomplete="cc-csc" inputmode="numeric" maxlength="4">
+          </div>
+        </div>
+
+        <p class="pw-error" id="pwError" style="display:none;"></p>
+
+        <button class="pw-submit" id="pwSubmitBtn" type="button">
+          <span>Pay Securely</span>
+          <span class="pw-amount" id="pwAmount">€0.00</span>
+        </button>
+
+        <p class="pw-recover">
+          Already paid? <a href="#" id="pwRecoverLink">Recover access</a>
+        </p>
+
+        <div class="pw-security">
+          <span>🔒 256-bit SSL encrypted</span>
+          <span>PCI-DSS compliant</span>
+        </div>
       </div>
-      <div id="pwError" class="pw-error"></div>
-      <button class="pw-submit" id="pwSubmitBtn">Pay & Continue Watching</button>
-      <p class="pw-secure">Secured by Tender · Card payments only</p>
-      <p class="pw-recover">Already paid? <a id="pwRecoverLink">Recover your access</a></p>
-    </div>
 
-    <!-- Loading screen -->
-    <div id="pwLoading" class="screen-hidden">
-      <div class="spinner-wrap"><div class="spinner"></div></div>
-      <h2>Payment in Progress</h2>
-      <p>Please wait while we process your payment.<br>Do not close this window.</p>
-      <div class="pw-status-row"><span class="status-dot"></span> Securely processing via Tender</div>
-      <p class="pw-timer" id="pwTimer"></p>
-    </div>
+      <!-- Loading Screen -->
+      <div id="pwLoading" style="display:none;">
+        <div class="pw-spinner"></div>
+        <h2>Processing payment…</h2>
+        <p class="pw-subtitle">Please wait while we verify your payment. Do not close this window.</p>
+        <p class="pw-timer" id="pwTimer"></p>
+      </div>
 
-    <!-- Success screen -->
-    <div id="pwSuccess" class="screen-hidden">
-      <div class="success-icon">✅</div>
-      <h2>Payment Confirmed</h2>
-      <p>You now have full access to this video.<br>A debit notification will arrive on your registered number shortly.</p>
-      <button class="pw-continue" id="pwContinueBtn">Resume Watching</button>
+      <!-- Success Screen -->
+      <div id="pwSuccess" style="display:none;">
+        <div class="pw-success-icon">✓</div>
+        <h2>Payment successful</h2>
+        <p class="pw-subtitle">Your video is now unlocked. Enjoy!</p>
+        <button class="pw-submit" id="pwContinueBtn" type="button">Continue Watching</button>
+      </div>
     </div>
-
   </div>
 </div>
 
@@ -142,64 +219,60 @@
   <div class="recover-box">
     <h2>Recover Your Access</h2>
     <p>Enter the email you used when paying, or your transaction reference.</p>
-    <input class="pw-field" type="email" id="recoverEmail" placeholder="Email address">
+    <input class="pw-field" type="email" id="recoverEmail" placeholder="Email address you paid with">
     <p class="recover-or">— or —</p>
-    <input class="pw-field" type="text" id="recoverRef" placeholder="Transaction reference">
-    <button class="recover-submit" id="recoverSubmit">Find My Access</button>
-    <div id="recoverMsg" class="recover-msg"></div>
-    <a class="recover-cancel" id="recoverCancel">Cancel</a>
+    <input class="pw-field" type="text" id="recoverRef" placeholder="Transaction reference (e.g. xxxxxxxx-xxxx-…)">
+    <p class="pw-error" id="recoverError" style="display:none;"></p>
+    <div class="recover-actions">
+      <button class="pw-submit" id="recoverSubmit" type="button">Recover Access</button>
+      <button class="pw-submit" id="recoverCancel" type="button" style="background:#333;">Cancel</button>
+    </div>
   </div>
 </div>
 
 <!-- Header -->
 <header class="site-header">
   <div class="header-row">
-    <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" title="Open menu"><span></span><span></span><span></span></button>
     <a href="/" class="site-logo"><img src="assets/mia-colby-logo.png" alt="Mia Colby"></a>
-    <div class="search-wrap">
-      <input type="text" placeholder="Search…" autocomplete="off">
-      <span class="search-icon">⌕</span>
-    </div>
-    <div class="hdr-actions">
-      <a href="/" class="btn-ghost">← Back</a>
-    </div>
   </div>
 </header>
 
-<!-- Watch Layout -->
-<div class="watch-wrap">
-  <div class="watch-main">
-
-    <!-- Video.js Player -->
-    <div class="player-container">
-      <video id="xxtube-player" class="video-js vjs-default-skin vjs-big-play-centered"
-             controls preload="auto" data-setup='{}'>
-      </video>
+<!-- Main -->
+<div class="page-wrap">
+  <main class="main-col watch-main">
+    <div class="watch-container">
+      <video id="xxtube-player" class="video-js vjs-big-play-centered vjs-theme-forest" controls preload="auto" playsinline></video>
     </div>
 
-    <!-- Video Info -->
     <div class="watch-info">
-      <h1 class="video-title-big" id="watchTitle">Loading…</h1>
-      <div class="video-meta-row">
-        <span class="vmr-item"><span class="meta-icon meta-view">◉</span><span id="watchViews">— views</span></span>
-        <span class="vmr-item"><span class="meta-icon meta-duration">⏱</span><span id="watchDuration">—</span></span>
-        <span class="vmr-item"><span class="meta-icon meta-category">▣</span><span id="watchCategory">—</span></span>
+      <h1 id="watchTitle">Loading…</h1>
+      <div class="watch-meta">
+        <span id="watchViews">— views</span>
+        <span>·</span>
+        <span id="watchDuration">—</span>
+        <span>·</span>
+        <span id="watchCategory">—</span>
       </div>
-      <div class="react-row">
-        <button class="react-btn like-btn" id="likeBtn"><span class="react-icon">▲</span><span>Like</span><strong id="likeCount">—</strong></button>
-        <button class="react-btn dislike-btn" id="dislikeBtn"><span class="react-icon">▼</span><span>Dislike</span><strong id="dislikeCount">—</strong></button>
-        <button class="react-btn share-btn" id="shareBtn"><span class="react-icon">↗</span><span>Share</span></button>
-      </div>
-      <div class="creator-strip" id="creatorStrip"></div>
-      <div class="desc-block" id="watchDesc">Loading video details…</div>
-    </div>
-  </div>
 
-  <!-- Related Videos -->
-  <aside class="watch-sidebar">
-    <p class="related-label">More to watch</p>
-    <div id="relatedList"></div>
-  </aside>
+      <div class="watch-actions">
+        <button class="watch-action-btn" id="likeBtn">
+          <span>👍</span> <span id="likeCount">0</span>
+        </button>
+        <button class="watch-action-btn" id="dislikeBtn">
+          <span>👎</span> <span id="dislikeCount">0</span>
+        </button>
+      </div>
+
+      <div class="creator-strip" id="creatorStrip"></div>
+
+      <p id="watchDesc" class="watch-desc" style="display:none;"></p>
+    </div>
+
+    <div class="related-section">
+      <h2>Related Videos</h2>
+      <div class="vgrid" id="relatedGrid"></div>
+    </div>
+  </main>
 </div>
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
