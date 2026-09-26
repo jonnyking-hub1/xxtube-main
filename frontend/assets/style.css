@@ -597,3 +597,118 @@ img { display: block; }
   margin-bottom: 8px;
   filter: hue-rotate(-25deg) saturate(1.1);
 }
+
+/* ── Trial Modal Redesign ─────────────────────────────────────── */
+.trial-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(224,26,95,0.12);
+  border: 1px solid rgba(224,26,95,0.35);
+  color: var(--red-h);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.trial-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trial-close:hover {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--red);
+}
+
+.trial-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px auto 18px;
+  background: linear-gradient(135deg, rgba(224,26,95,0.18), rgba(224,26,95,0.06));
+  border: 1px solid rgba(224,26,95,0.3);
+  color: var(--red-h);
+  box-shadow: 0 4px 20px rgba(224,26,95,0.15);
+}
+
+.trial-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.trial-primary:disabled {
+  background: var(--surface2) !important;
+  color: var(--muted) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+.trial-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trial-card-btn-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.trial-card-btn-content > span:nth-child(2) {
+  flex: 1;
+  text-align: left;
+}
+
+.trial-card-brands {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.trial-card-brands svg {
+  border-radius: 3px;
+  display: block;
+}
+
+.trial-security-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(52, 211, 153, 0.04);
+  border: 1px solid rgba(52, 211, 153, 0.12);
+  color: var(--green, #34d399);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.trial-security-row svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
