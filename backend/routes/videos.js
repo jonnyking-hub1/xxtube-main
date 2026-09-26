@@ -16,7 +16,14 @@ function isDemoMode() {
     return !process.env.DATABASE_URL || process.env.DEMO_MODE === 'true';
 }
 
+function noCache(res) {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+}
+
 router.get('/', async (req, res) => {
+    noCache(res);
     try {
         if (isDemoMode()) {
             const videos = getDemoVideos();
@@ -169,6 +176,7 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
+    noCache(res);
     try {
         if (isDemoMode()) {
             const video = getDemoVideoById(req.params.id);
@@ -212,6 +220,7 @@ router.get('/:id', async (req, res) => {
 });
 
 router.get('/:id/stream', requireSession, async (req, res) => {
+    noCache(res);
     try {
         if (isDemoMode()) {
             return res.json({ stream_url: getDemoStreamUrl() });
@@ -238,6 +247,7 @@ router.get('/:id/stream', requireSession, async (req, res) => {
 });
 
 router.get('/:id/raw', requireSession, async (req, res) => {
+    noCache(res);
     try {
         if (isDemoMode()) {
             const streamUrl = getDemoStreamUrl();
@@ -298,13 +308,14 @@ router.get('/:id/raw', requireSession, async (req, res) => {
 });
 
 router.get('/:id/thumb', async (req, res) => {
+    noCache(res);
     try {
         if (isDemoMode()) {
             const fallback = 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=900&q=80';
             const upstream = await fetch(fallback);
             if (!upstream.ok) return res.status(502).end();
             res.setHeader('Content-Type', upstream.headers.get('content-type') || 'image/jpeg');
-            res.setHeader('Cache-Control', 'public, max-age=3600');
+            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
             const reader = upstream.body.getReader();
             while (true) {
                 const { done, value } = await reader.read();
@@ -328,7 +339,7 @@ router.get('/:id/thumb', async (req, res) => {
         if (!upstream.ok) return res.status(502).end();
 
         res.setHeader('Content-Type', upstream.headers.get('content-type') || 'image/jpeg');
-        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
 
         const reader = upstream.body.getReader();
         while (true) {
