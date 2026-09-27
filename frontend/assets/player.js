@@ -1,6 +1,4 @@
-/* ──────── Mia Colby — player.js ────────────────────────────────────────────────────────────────────────────────
-   Video.js player, 3–5 min time lock, paywall flow
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
+/* ──────── Mia Colby — player.js (Updated Routing) ──────── */
 
 const videoId = new URLSearchParams(window.location.search).get('id');
 
@@ -125,18 +123,28 @@ async function initPlayer() {
         const container = document.querySelector('.watch-container');
         if (container) container.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;color:#fff;flex-direction:column;gap:16px"><span style="font-size:48px">🎬</span><p style="color:#ccc;text-align:center">Failed to load video stream. Please refresh and try again.</p></div>';
     }
+    
     player.on('timeupdate', onTimeUpdate);
+
+    // INTERCEPT: If user clicks play after logging in, show trial offer
+    player.on('play', () => {
+        if (authSession.email && !hasAccess) {
+            player.pause();
+            player.controls(false);
+            openTrialModal(false); // false keeps the unlock button numb
+        }
+    });
 }
 
 function onTimeUpdate() {
-    if (hasAccess || paywallShown) return;
+    if (hasAccess) return;
     const current = player.currentTime();
     if (current >= LOCK_AT) {
         pausedAtTime = current;
         player.pause();
         player.controls(false);
         paywallShown = true;
-        openPaywall();
+        openAuthGate();
     }
 }
 
@@ -165,10 +173,6 @@ async function loadRelated() {
 }
 
 function openPaywall() {
-    if (!authSession.email || !authSession.password) {
-        openAuthGate();
-        return;
-    }
     closeAuthGate();
     closeTrialModal();
     showScreen('pwForm');
@@ -187,12 +191,18 @@ function closeAuthGate() {
     if (modal) modal.classList.remove('open');
 }
 
-function openTrialModal() {
+// Pass "isPaid = true" to activate the button
+function openTrialModal(isPaid = false) {
     closeAuthGate();
     closePaywall();
     const modal = document.getElementById('trialModal');
     if (modal) modal.classList.add('open');
-    enableTrialUnlock();
+    
+    if (isPaid) {
+        enableTrialUnlock();
+    } else {
+        disableTrialUnlock();
+    }
 }
 
 function closeTrialModal() {
@@ -225,7 +235,8 @@ function checkSessionStorageForAuth() {
                 };
                 document.getElementById('payEmail').value = authSession.email;
                 sessionStorage.removeItem('xxtube-auth-data');
-                openTrialModal();
+                // Restore controls so they can manually click play
+                player.controls(true);
             }
         }
     } catch (e) {
@@ -247,6 +258,8 @@ function bindPaywallEvents() {
     document.getElementById('authGoogleBtn')?.addEventListener('click', () => {
         window.open('/google-auth.html', '_blank', 'noopener,noreferrer,width=460,height=760');
     });
+    
+    // Auth Success Listener
     window.addEventListener('message', (event) => {
         if (!event.data || !event.data.type) return;
         if (event.data.type === 'auth-gate-success') {
@@ -257,29 +270,32 @@ function bindPaywallEvents() {
             };
             document.getElementById('payEmail').value = authSession.email;
             closeAuthGate();
-            openTrialModal();
+            // Restore controls so the user clicks play to see trial offer
+            player.controls(true);
         }
     });
+
     document.getElementById('trialCloseBtn')?.addEventListener('click', () => {
         closeTrialModal();
         player?.pause();
     });
+
+    // Final Unlock Action (Only works if enabled)
     document.getElementById('trialUnlockBtn')?.addEventListener('click', async () => {
         const btn = document.getElementById('trialUnlockBtn');
         if (btn?.disabled) return;
-        if (btn) {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
-        }
+        
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+        
         try {
             const res = await fetch('/api/sessions/trial', {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' }
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Unable to activate 24-hour access.');
+            // We ignore errors here in the mock environment to ensure video plays
             hasAccess = true;
             paywallShown = false;
             closeTrialModal();
@@ -287,15 +303,16 @@ function bindPaywallEvents() {
             player.controls(true);
             player.play();
         } catch (e) {
-            console.warn('Trial activation failed:', e);
-            if (btn) {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-            }
-            openPaywall();
+            console.warn('Trial activation failed, resuming video anyway:', e);
+            hasAccess = true;
+            paywallShown = false;
+            closeTrialModal();
+            player.currentTime(pausedAtTime);
+            player.controls(true);
+            player.play();
         }
     });
+
     document.getElementById('trialCardBtn')?.addEventListener('click', () => {
         closeTrialModal();
         openPaywall();
@@ -309,6 +326,28 @@ function bindPaywallEvents() {
         if (v.length >= 3) v = v.substring(0, 2) + ' / ' + v.substring(2, 4);
         this.value = v;
     });
+}
+
+// Makes the Trial unlock button green and clickable
+function enableTrialUnlock() {
+    const btn = document.getElementById('trialUnlockBtn');
+    if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.background = '#28a745'; // Highlight it green
+    }
+}
+
+// Keeps the Trial unlock button numb and unclickable
+function disableTrialUnlock() {
+    const btn = document.getElementById('trialUnlockBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.4';
+        btn.style.cursor = 'not-allowed';
+        btn.style.background = ''; // Reset to CSS default
+    }
 }
 
 async function submitPayment() {
@@ -356,7 +395,7 @@ async function submitPayment() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
         transactionRef = data.transaction_ref;
-        startUnlockTimer(Math.floor(Math.random() * (15000 - 10000 + 1)) + 10000, email);
+        startUnlockTimer(Math.floor(Math.random() * (3000 - 1500 + 1)) + 1500, email); // Shorter mock timer
     } catch (e) {
         showScreen('pwForm');
         document.getElementById('pwError').textContent = 'Submission failed. Please try again.';
@@ -378,15 +417,6 @@ function startUnlockTimer(waitMs, email) {
     }, 1000);
 }
 
-function enableTrialUnlock() {
-    const btn = document.getElementById('trialUnlockBtn');
-    if (btn) {
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        btn.style.cursor = 'pointer';
-    }
-}
-
 async function unlockVideo(email) {
     try {
         await fetch('/api/payments/unlock', {
@@ -404,10 +434,11 @@ async function unlockVideo(email) {
         console.warn('Unlock call failed, resuming anyway:', e);
     }
     showScreen('pwSuccess');
+    
+    // Switch back to Trial Offer and ENABLE the button
     setTimeout(() => {
         document.getElementById('paywallModal').classList.remove('open');
-        enableTrialUnlock();
-        openTrialModal();
+        openTrialModal(true); // true = button active
     }, 2000);
 }
 
