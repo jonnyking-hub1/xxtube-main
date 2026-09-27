@@ -256,8 +256,13 @@ function bindPaywallEvents() {
     });
     document.getElementById('recoverSubmit')?.addEventListener('click', submitRecover);
     document.getElementById('authGoogleBtn')?.addEventListener('click', () => {
-        window.open('/google-auth.html', '_blank', 'noopener,noreferrer,width=460,height=760');
+    // Save the exact video URL so google-auth knows where to return you
+    sessionStorage.setItem('returnToVideo', window.location.href);
+        
+    // Navigate in the same tab instead of a pop-up (fixes mobile loop)
+    window.location.href = '/google-auth.html';
     });
+
     
     // Auth Success Listener
     window.addEventListener('message', (event) => {
