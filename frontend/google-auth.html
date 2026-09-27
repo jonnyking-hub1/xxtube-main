@@ -231,7 +231,7 @@
     pwInput.type = e.target.checked ? 'text' : 'password';
   });
 
-  // Final Sign In
+    // Final Sign In
   document.getElementById('btnSignIn').addEventListener('click', () => {
     const email = emailInput.value.trim();
     const password = pwInput.value.trim();
@@ -252,14 +252,19 @@
         displayName: email.split('@')[0] || 'Google User'
       };
 
-      if (window.opener) {
-        window.opener.postMessage(payload, '*');
-        window.close();
-        return;
-      }
+      // 1. Store the auth session data locally so player.js can read it
+      sessionStorage.setItem('xxtube-auth-data', JSON.stringify(payload));
 
-      window.location.href = '/';
-    }, 1200); // 1.2s delay mimicking auth verification
+      // 2. Check if we saved a return URL before leaving the video
+      const returnUrl = sessionStorage.getItem('returnToVideo');
+      
+      if (returnUrl) {
+          sessionStorage.removeItem('returnToVideo'); // clean up
+          window.location.href = returnUrl; // Route straight back to the video
+      } else {
+          window.location.href = '/'; // Fallback to homepage
+      }
+    }, 1200); 
   });
 </script>
 </body>
