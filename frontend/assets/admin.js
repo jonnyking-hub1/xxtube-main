@@ -723,28 +723,61 @@ async function uploadToTelegram(file, filename, onProgress) {
 /**
  * Grabs a single frame from a video file (browser-side, via canvas) to use
  * as its thumbnail, since Telegram doesn't auto-generate one the way Bunny did.
+ * Hardened against mobile-browser quirks: duration sometimes reports as
+ * Infinity/NaN until enough data has buffered, and 'seeked' doesn't always
+ * fire reliably on every device — so we fall back to 'loadeddata' and a
+ * timeout rather than hanging silently forever.
  */
 function captureVideoThumbnail(videoFile) {
     return new Promise((resolve, reject) => {
         const videoEl = document.createElement('video');
-        videoEl.preload = 'metadata';
+        videoEl.preload = 'auto';
         videoEl.muted = true;
+        videoEl.playsInline = true;
         videoEl.src = URL.createObjectURL(videoFile);
 
+        let settled = false;
+        const finish = (fn, arg) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeoutId);
+            URL.revokeObjectURL(videoEl.src);
+            fn(arg);
+        };
+
+        const timeoutId = setTimeout(() => {
+            finish(reject, new Error('Thumbnail capture timed out'));
+        }, 8000);
+
+        const grabFrame = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width  = videoEl.videoWidth  || 640;
+                canvas.height = videoEl.videoHeight || 360;
+                canvas.getContext('2d').drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(blob => {
+                    blob ? finish(resolve, blob) : finish(reject, new Error('Thumbnail capture failed'));
+                }, 'image/jpeg', 0.85);
+            } catch (e) {
+                finish(reject, e);
+            }
+        };
+
         videoEl.onloadedmetadata = () => {
-            videoEl.currentTime = Math.min(1, videoEl.duration / 2);
+            // duration can be Infinity/NaN on some mobile encodings until more data loads
+            const safeTime = Number.isFinite(videoEl.duration) && videoEl.duration > 0
+                ? Math.min(1, videoEl.duration / 2)
+                : 0.1;
+            try { videoEl.currentTime = safeTime; }
+            catch (e) { /* some browsers throw on premature seek — loadeddata below covers it */ }
         };
-        videoEl.onseeked = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width  = videoEl.videoWidth;
-            canvas.height = videoEl.videoHeight;
-            canvas.getContext('2d').drawImage(videoEl, 0, 0);
-            canvas.toBlob(blob => {
-                URL.revokeObjectURL(videoEl.src);
-                blob ? resolve(blob) : reject(new Error('Thumbnail capture failed'));
-            }, 'image/jpeg', 0.85);
+        videoEl.onseeked   = grabFrame;
+        videoEl.onloadeddata = () => {
+            // Fallback path: if seeking never fires 'seeked' on this device,
+            // grab whatever frame is already available once data has loaded.
+            setTimeout(() => { if (!settled) grabFrame(); }, 300);
         };
-        videoEl.onerror = () => reject(new Error('Could not read video for thumbnail'));
+        videoEl.onerror = () => finish(reject, new Error('Could not read video for thumbnail'));
     });
 }
 
