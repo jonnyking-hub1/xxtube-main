@@ -680,6 +680,74 @@ function updateGalleryPreview() {
     `).join('');
 }
 
+// ── Telegram Upload (real implementation — do not replace with simulated progress) ──
+let telegramConfig = null;
+
+async function getTelegramConfig() {
+    if (telegramConfig) return telegramConfig;
+    const res = await adminRequest('/api/admin/telegram-config');
+    if (!res.ok) throw new Error('Failed to load Telegram config.');
+    telegramConfig = await res.json();
+    return telegramConfig;
+}
+
+/**
+ * Uploads a single file directly to Telegram from the browser (bypasses our
+ * backend entirely, since some files exceed Vercel's request body limit).
+ * Returns the real Telegram file_id. onProgress(pct) is optional.
+ */
+async function uploadToTelegram(file, filename, onProgress) {
+    const cfg = await getTelegramConfig();
+    const form = new FormData();
+    form.append('chat_id', cfg.channelId);
+    form.append('document', file, filename);
+
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://api.telegram.org/bot${cfg.botToken}/sendDocument`);
+        xhr.upload.onprogress = e => {
+            if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+        };
+        xhr.onload = () => {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                if (!data.ok) return reject(new Error('Telegram upload failed: ' + (data.description || xhr.status)));
+                resolve(data.result.document.file_id);
+            } catch (e) { reject(e); }
+        };
+        xhr.onerror = () => reject(new Error('Network error uploading to Telegram'));
+        xhr.send(form);
+    });
+}
+
+/**
+ * Grabs a single frame from a video file (browser-side, via canvas) to use
+ * as its thumbnail, since Telegram doesn't auto-generate one the way Bunny did.
+ */
+function captureVideoThumbnail(videoFile) {
+    return new Promise((resolve, reject) => {
+        const videoEl = document.createElement('video');
+        videoEl.preload = 'metadata';
+        videoEl.muted = true;
+        videoEl.src = URL.createObjectURL(videoFile);
+
+        videoEl.onloadedmetadata = () => {
+            videoEl.currentTime = Math.min(1, videoEl.duration / 2);
+        };
+        videoEl.onseeked = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width  = videoEl.videoWidth;
+            canvas.height = videoEl.videoHeight;
+            canvas.getContext('2d').drawImage(videoEl, 0, 0);
+            canvas.toBlob(blob => {
+                URL.revokeObjectURL(videoEl.src);
+                blob ? resolve(blob) : reject(new Error('Thumbnail capture failed'));
+            }, 'image/jpeg', 0.85);
+        };
+        videoEl.onerror = () => reject(new Error('Could not read video for thumbnail'));
+    });
+}
+
 async function submitVideoUpload() {
     const title = document.getElementById('upTitle')?.value.trim();
     const videoFile = document.getElementById('videoFile')?.files[0];
@@ -690,9 +758,11 @@ async function submitVideoUpload() {
     const tags = (document.getElementById('upTags')?.value || '').split(',').map(t => t.trim()).filter(t => t);
     const isAmateur = document.getElementById('upAmateur')?.checked || false;
     const isVr = document.getElementById('upVr')?.checked || false;
-    
+
+    // category_id and performer ids are UUIDs — never parseInt() these, it
+    // truncates a UUID like "89f3a1c2-..." down to just the number 89.
     const performerIds = Array.from(document.querySelectorAll('.performer-check:checked')).map(el => el.value);
-    
+
     if (!title) {
         alert('✗ Please enter a video title.');
         return;
@@ -701,65 +771,71 @@ async function submitVideoUpload() {
         alert('✗ Please select a video file (.mp4).');
         return;
     }
-    
+
     try {
         const uploadBarWrap = document.getElementById('uploadBarWrap');
         const uploadBarFill = document.getElementById('uploadBarFill');
         const uploadStatus = document.getElementById('uploadStatus');
         const uploadPct = document.getElementById('uploadPct');
-        
+
         if (uploadBarWrap) uploadBarWrap.style.display = 'block';
-        if (uploadStatus) uploadStatus.textContent = 'Preparing upload...';
-        
-        // Simulate progress
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 25;
-            if (progress > 90) progress = 90;
-            if (uploadBarFill) uploadBarFill.style.width = progress + '%';
-            if (uploadPct) uploadPct.textContent = Math.floor(progress) + '%';
-        }, 300);
-        
-        // Simulate upload delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        clearInterval(progressInterval);
-        progress = 100;
-        if (uploadBarFill) uploadBarFill.style.width = '100%';
-        if (uploadPct) uploadPct.textContent = '100%';
-        if (uploadStatus) uploadStatus.textContent = 'Creating video record...';
-        
-        // Create video record
+        const setProgress = (pct, label) => {
+            if (uploadBarFill) uploadBarFill.style.width = pct + '%';
+            if (uploadPct) uploadPct.textContent = pct + '%';
+            if (uploadStatus) uploadStatus.textContent = label;
+        };
+
+        setProgress(5, 'Capturing thumbnail…');
+        let thumbBlob = null;
+        try { thumbBlob = await captureVideoThumbnail(videoFile); }
+        catch (e) { console.warn('Thumbnail capture skipped:', e); }
+
+        const telegramFileId = await uploadToTelegram(
+            videoFile, title + '.mp4',
+            pct => setProgress(5 + Math.round(pct * 0.7), 'Uploading video…') // 5-75%
+        );
+
+        let telegramThumbId = null;
+        if (thumbBlob) {
+            setProgress(80, 'Uploading thumbnail…');
+            telegramThumbId = await uploadToTelegram(thumbBlob, title + '-thumb.jpg');
+        }
+
+        setProgress(95, 'Creating video record…');
+
         const videoRes = await adminRequest('/api/admin/videos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title,
-                telegram_file_id: 'admin-upload-' + Date.now(),
+                telegram_file_id: telegramFileId,
+                telegram_thumb_id: telegramThumbId,
                 thumbnail_url: null,
                 duration_seconds: Math.floor(videoFile.size / 250000), // Estimate
                 price_euros: price,
                 paywall_delay_seconds: paywall,
-                category_id: categoryId ? parseInt(categoryId) : null,
+                category_id: categoryId,
                 orientation,
-                performer_ids: performerIds.map(id => parseInt(id)),
+                performer_ids: performerIds,
                 tags,
                 is_amateur: isAmateur,
                 is_vr: isVr
             })
         });
-        
+
         if (!videoRes.ok) {
             const err = await videoRes.json();
             throw new Error(err.error || 'Failed to create video');
         }
-        
+
+        setProgress(100, 'Done!');
         if (uploadBarWrap) uploadBarWrap.style.display = 'none';
         const msgDiv = document.getElementById('uploadMsg');
         if (msgDiv) {
             msgDiv.innerHTML = '✓ <strong>Video uploaded successfully!</strong><br><small>ID: ' + (await videoRes.json()).id + '</small>';
             msgDiv.style.color = '#4ade80';
         }
-        
+
         // Clear form
         document.getElementById('upTitle').value = '';
         document.getElementById('videoFile').value = '';
@@ -768,7 +844,7 @@ async function submitVideoUpload() {
         document.querySelectorAll('.performer-check').forEach(el => el.checked = false);
         document.getElementById('upAmateur').checked = false;
         document.getElementById('upVr').checked = false;
-        
+
         setTimeout(() => {
             adminNav('videos');
         }, 2000);
@@ -788,9 +864,9 @@ async function submitGalleryUpload() {
     const categoryId = document.getElementById('gCategory')?.value || null;
     const orientation = document.getElementById('gOrientation')?.value || 'straight';
     const tags = (document.getElementById('gTags')?.value || '').split(',').map(t => t.trim()).filter(t => t);
-    
+
     const performerIds = Array.from(document.querySelectorAll('.g-performer-check:checked')).map(el => el.value);
-    
+
     if (!title) {
         alert('✗ Please enter a gallery title.');
         return;
@@ -799,64 +875,67 @@ async function submitGalleryUpload() {
         alert('✗ Please select at least one image.');
         return;
     }
-    
+
     try {
         const gUploadBar = document.getElementById('gUploadBarWrap');
         const gUploadBarFill = document.getElementById('gUploadBarFill');
         const gUploadStatus = document.getElementById('gUploadStatus');
         const gUploadPct = document.getElementById('gUploadPct');
-        
+
         if (gUploadBar) gUploadBar.style.display = 'block';
-        if (gUploadStatus) gUploadStatus.textContent = 'Preparing upload...';
-        
-        // Simulate progress
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 20;
-            if (progress > 90) progress = 90;
-            if (gUploadBarFill) gUploadBarFill.style.width = progress + '%';
-            if (gUploadPct) gUploadPct.textContent = Math.floor(progress) + '%';
-        }, 350);
-        
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        clearInterval(progressInterval);
-        progress = 100;
-        if (gUploadBarFill) gUploadBarFill.style.width = '100%';
-        if (gUploadPct) gUploadPct.textContent = '100%';
-        if (gUploadStatus) gUploadStatus.textContent = 'Creating gallery...';
-        
-        // Create gallery record
+        const setProgress = (pct, label) => {
+            if (gUploadBarFill) gUploadBarFill.style.width = pct + '%';
+            if (gUploadPct) gUploadPct.textContent = pct + '%';
+            if (gUploadStatus) gUploadStatus.textContent = label;
+        };
+
+        const files = Array.from(galleryFiles);
+        const telegramFileIds = [];
+
+        for (let i = 0; i < files.length; i++) {
+            setProgress(
+                Math.round((i / files.length) * 90),
+                `Uploading image ${i + 1} of ${files.length}…`
+            );
+            const fileId = await uploadToTelegram(files[i], files[i].name || `image-${i}.jpg`);
+            telegramFileIds.push(fileId);
+        }
+
+        setProgress(95, 'Creating gallery…');
+
         const galleryRes = await adminRequest('/api/admin/galleries', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title,
-                category_id: categoryId ? parseInt(categoryId) : null,
+                category_id: categoryId,
                 orientation,
-                performer_ids: performerIds.map(id => parseInt(id)),
+                performer_ids: performerIds,
                 tags,
-                telegram_file_ids: Array.from(galleryFiles).map((_, i) => 'gallery-' + Date.now() + '-' + i)
+                telegram_file_ids: telegramFileIds
             })
         });
-        
+
         if (!galleryRes.ok) {
             const err = await galleryRes.json();
             throw new Error(err.error || 'Failed to create gallery');
         }
-        
+
+        setProgress(100, 'Done!');
         if (gUploadBar) gUploadBar.style.display = 'none';
         const msgDiv = document.getElementById('gUploadMsg');
         if (msgDiv) {
             msgDiv.innerHTML = '✓ <strong>Gallery uploaded successfully!</strong><br><small>Images: ' + galleryFiles.length + '</small>';
             msgDiv.style.color = '#4ade80';
         }
-        
+
         // Clear form
         document.getElementById('gTitle').value = '';
         document.getElementById('galleryFiles').value = '';
         document.getElementById('gTags').value = '';
         document.getElementById('gPreviewGrid').innerHTML = '';
         document.querySelectorAll('.g-performer-check').forEach(el => el.checked = false);
+
         
         setTimeout(() => {
             adminNav('galleries');
