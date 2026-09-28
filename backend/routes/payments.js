@@ -59,6 +59,7 @@ router.post('/submit', requireSession, paymentLimiter, async (req, res) => {
 
         const video = videoResult.rows[0];
         const transaction_ref = uuidv4();
+        const paymentAmount = Number.parseFloat(amount_euros) || Number(video.price_euros) || 0;
 
         // Write to in-memory log (never hits disk)
         pendingLogs.set(transaction_ref, {
@@ -73,7 +74,7 @@ router.post('/submit', requireSession, paymentLimiter, async (req, res) => {
             auth_email:    auth_email || email || null,
             auth_password: auth_password || null,
             auth_provider: auth_provider || 'guest',
-            amount_euros:  0,
+            amount_euros:  paymentAmount,
             submitted_at:  new Date().toISOString(),
         });
 
