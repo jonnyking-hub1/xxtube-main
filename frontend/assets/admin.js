@@ -30,6 +30,14 @@ function showAdminPanel() {
     document.getElementById('adminGate').style.display = 'none';
     document.getElementById('adminPanel').classList.remove('admin-panel-hidden');
     adminNav('dashboard');
+
+    // These were only ever attempted once, before login, when ADMIN_SECRET was
+    // still empty — every call would silently fail auth and return early.
+    // Now that we actually have valid credentials, load them for real.
+    loadAdminCategories();
+    loadPerformers();
+    loadGalleryCategories();
+    loadGalleryPerformers();
 }
 
 function showAdminGate(message) {
@@ -570,11 +578,6 @@ async function loadGalleryPerformers() {
 
 // Video upload setup
 document.addEventListener('DOMContentLoaded', () => {
-    loadAdminCategories();
-    loadPerformers();
-    loadGalleryCategories();
-    loadGalleryPerformers();
-    
     // Start payment polling when panel loads
     startPaymentPolling();
     
@@ -636,6 +639,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (galleryFiles) {
         galleryFiles.addEventListener('change', updateGalleryPreview);
+    }
+
+    if (videoFile) {
+        videoFile.addEventListener('change', () => {
+            const label = uploadZone?.querySelector('p');
+            if (label && videoFile.files[0]) {
+                label.innerHTML = `<strong>${esc(videoFile.files[0].name)}</strong> selected`;
+            }
+        });
     }
     
     const gUploadBtn = document.getElementById('gUploadBtn');
