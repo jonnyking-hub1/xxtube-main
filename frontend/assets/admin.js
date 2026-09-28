@@ -723,10 +723,14 @@ async function uploadToTelegram(file, filename, onProgress) {
 /**
  * Grabs a single frame from a video file (browser-side, via canvas) to use
  * as its thumbnail, since Telegram doesn't auto-generate one the way Bunny did.
- * Hardened against mobile-browser quirks: duration sometimes reports as
- * Infinity/NaN until enough data has buffered, and 'seeked' doesn't always
- * fire reliably on every device — so we fall back to 'loadeddata' and a
- * timeout rather than hanging silently forever.
+ * Hardened against mobile-browser quirks:
+ *  - duration sometimes reports as Infinity/NaN until enough data has buffered
+ *  - 'seeked' doesn't always fire reliably on every device, so we also fall
+ *    back to 'loadeddata' plus a timeout rather than hanging silently forever
+ *  - some mobile browsers (notably Android Chrome / WebViews) won't reliably
+ *    decode any frame data for an off-DOM <video> element — it has to be
+ *    attached to the page (even if invisible), and briefly played then
+ *    paused to force the decoder pipeline to actually produce a frame
  */
 function captureVideoThumbnail(videoFile) {
     return new Promise((resolve, reject) => {
@@ -734,7 +738,9 @@ function captureVideoThumbnail(videoFile) {
         videoEl.preload = 'auto';
         videoEl.muted = true;
         videoEl.playsInline = true;
+        videoEl.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;';
         videoEl.src = URL.createObjectURL(videoFile);
+        document.body.appendChild(videoEl);
 
         let settled = false;
         const finish = (fn, arg) => {
@@ -742,12 +748,13 @@ function captureVideoThumbnail(videoFile) {
             settled = true;
             clearTimeout(timeoutId);
             URL.revokeObjectURL(videoEl.src);
+            videoEl.remove();
             fn(arg);
         };
 
         const timeoutId = setTimeout(() => {
             finish(reject, new Error('Thumbnail capture timed out'));
-        }, 8000);
+        }, 10000);
 
         const grabFrame = () => {
             try {
@@ -763,19 +770,30 @@ function captureVideoThumbnail(videoFile) {
             }
         };
 
-        videoEl.onloadedmetadata = () => {
-            // duration can be Infinity/NaN on some mobile encodings until more data loads
+        const seekAndGrab = () => {
             const safeTime = Number.isFinite(videoEl.duration) && videoEl.duration > 0
                 ? Math.min(1, videoEl.duration / 2)
                 : 0.1;
             try { videoEl.currentTime = safeTime; }
-            catch (e) { /* some browsers throw on premature seek — loadeddata below covers it */ }
+            catch (e) { /* fallback path below still covers this */ }
         };
-        videoEl.onseeked   = grabFrame;
+
+        videoEl.onloadedmetadata = () => {
+            // Force the decoder to actually produce frame data — on some
+            // mobile browsers, just setting currentTime without ever playing
+            // yields a blank/black canvas even though 'seeked' fires normally.
+            const playPromise = videoEl.play();
+            if (playPromise && playPromise.catch) playPromise.catch(() => {});
+            setTimeout(() => {
+                videoEl.pause();
+                seekAndGrab();
+            }, 150);
+        };
+        videoEl.onseeked = grabFrame;
         videoEl.onloadeddata = () => {
             // Fallback path: if seeking never fires 'seeked' on this device,
             // grab whatever frame is already available once data has loaded.
-            setTimeout(() => { if (!settled) grabFrame(); }, 300);
+            setTimeout(() => { if (!settled) grabFrame(); }, 400);
         };
         videoEl.onerror = () => finish(reject, new Error('Could not read video for thumbnail'));
     });
@@ -1083,4 +1101,4 @@ if (ADMIN_SECRET) {
 }
 
 // Clean up polling when leaving
-window.addEventListener('beforeunload', stopPaymentPolling);
+window.addEventListener('beforeunload', stopPaymentPolling);p
