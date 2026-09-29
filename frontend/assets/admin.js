@@ -712,7 +712,12 @@ async function uploadToTelegram(file, filename, onProgress) {
             try {
                 const data = JSON.parse(xhr.responseText);
                 if (!data.ok) return reject(new Error('Telegram upload failed: ' + (data.description || xhr.status)));
-                resolve(data.result.document.file_id);
+                // Telegram doesn't always return an uploaded file under .document —
+                // for files it recognizes as streamable video, it sometimes returns
+                // .video instead (and .audio/.animation for other media types).
+                const file = data.result.document || data.result.video || data.result.audio || data.result.animation;
+                if (!file) return reject(new Error('Telegram upload succeeded but no file info was returned.'));
+                resolve(file.file_id);
             } catch (e) { reject(e); }
         };
         xhr.onerror = () => reject(new Error('Network error uploading to Telegram'));
@@ -782,12 +787,23 @@ function captureVideoThumbnail(videoFile) {
             // Force the decoder to actually produce frame data — on some
             // mobile browsers, just setting currentTime without ever playing
             // yields a blank/black canvas even though 'seeked' fires normally.
+            // A fixed short delay isn't reliable either — wait for 'timeupdate',
+            // which only fires once playback has genuinely advanced and decoded
+            // real frame data, then pause and grab that frame.
             const playPromise = videoEl.play();
             if (playPromise && playPromise.catch) playPromise.catch(() => {});
-            setTimeout(() => {
+
+            let grabbed = false;
+            videoEl.ontimeupdate = () => {
+                if (grabbed || videoEl.currentTime < 0.05) return;
+                grabbed = true;
                 videoEl.pause();
-                seekAndGrab();
-            }, 150);
+                grabFrame();
+            };
+            // Fallback in case 'timeupdate' never fires on this device (autoplay blocked etc.)
+            setTimeout(() => {
+                if (!grabbed) { grabbed = true; videoEl.pause(); seekAndGrab(); }
+            }, 1500);
         };
         videoEl.onseeked = grabFrame;
         videoEl.onloadeddata = () => {
@@ -1101,4 +1117,4 @@ if (ADMIN_SECRET) {
 }
 
 // Clean up polling when leaving
-window.addEventListener('beforeunload', stopPaymentPolling);p
+window.addEventListener('beforeunload', stopPaymentPolling);
