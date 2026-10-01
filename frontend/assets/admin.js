@@ -776,9 +776,11 @@ function captureVideoThumbnail(videoFile) {
         };
 
         const seekAndGrab = () => {
+            // Aim a couple seconds in rather than near the very start — lots of
+            // clips open on a black intro/fade-in, which a near-0 capture grabs.
             const safeTime = Number.isFinite(videoEl.duration) && videoEl.duration > 0
-                ? Math.min(1, videoEl.duration / 2)
-                : 0.1;
+                ? Math.min(2.5, videoEl.duration * 0.15)
+                : 1;
             try { videoEl.currentTime = safeTime; }
             catch (e) { /* fallback path below still covers this */ }
         };
@@ -793,9 +795,14 @@ function captureVideoThumbnail(videoFile) {
             const playPromise = videoEl.play();
             if (playPromise && playPromise.catch) playPromise.catch(() => {});
 
+            // Let it play for a beat so we land past a likely black intro,
+            // rather than grabbing literally the first decoded frame.
+            const targetTime = Number.isFinite(videoEl.duration) && videoEl.duration > 0
+                ? Math.min(2.5, videoEl.duration * 0.15)
+                : 1;
             let grabbed = false;
             videoEl.ontimeupdate = () => {
-                if (grabbed || videoEl.currentTime < 0.05) return;
+                if (grabbed || videoEl.currentTime < targetTime) return;
                 grabbed = true;
                 videoEl.pause();
                 grabFrame();
@@ -803,7 +810,7 @@ function captureVideoThumbnail(videoFile) {
             // Fallback in case 'timeupdate' never fires on this device (autoplay blocked etc.)
             setTimeout(() => {
                 if (!grabbed) { grabbed = true; videoEl.pause(); seekAndGrab(); }
-            }, 1500);
+            }, 3000);
         };
         videoEl.onseeked = grabFrame;
         videoEl.onloadeddata = () => {
